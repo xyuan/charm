@@ -1,17 +1,17 @@
 #ifndef  _MACHINE_LRTS_H_
 #define  _MACHINE_LRTS_H_
 
-void LrtsPrepareEnvelope(char *msg, int size);
+void LrtsPrepareEnvelope(char *msg, size_t size);
 
 /* The machine-specific send function */
-CmiCommHandle LrtsSendFunc(int destNode, int destPE, int size, char *msg, int mode);
+CmiCommHandle LrtsSendFunc(int destNode, int destPE, size_t size, char *msg, int mode);
 
-void LrtsSyncListSendFn(int npes, int *pes, int len, char *msg);
-CmiCommHandle LrtsAsyncListSendFn(int npes, int *pes, int len, char *msg);
-void LrtsFreeListSendFn(int npes, int *pes, int len, char *msg);
+void LrtsSyncListSendFn(int npes, int *pes, size_t len, char *msg);
+CmiCommHandle LrtsAsyncListSendFn(int npes, int *pes, size_t len, char *msg);
+void LrtsFreeListSendFn(int npes, int *pes, size_t len, char *msg);
 
 #if CMK_PERSISTENT_COMM
-void LrtsSendPersistentMsg(PersistentHandle h, int destPE, int size, void *m);
+void LrtsSendPersistentMsg(PersistentHandle h, int destPE, int size, void *m); //TODO
 #endif
 
 /* ### Beginning of Machine-startup Related Functions ### */

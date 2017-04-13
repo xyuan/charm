@@ -367,7 +367,7 @@ void CldBalanceHandler(void *msg)
 void CldHandler(void *msg)
 {
   CldInfoFn ifn; CldPackFn pfn;
-  int len, queueing, priobits; unsigned int *prioptr;
+  int queueing, priobits; size_t len; unsigned int *prioptr;
   
   CldRestoreHandler((char *)msg);
   ifn = (CldInfoFn)CmiHandlerToFunction(CmiGetInfo(msg));
@@ -378,7 +378,7 @@ void CldHandler(void *msg)
 
 void CldEnqueueGroup(CmiGroup grp, void *msg, int infofn)
 {
-  int len, queueing, priobits,i; unsigned int *prioptr;
+  int queueing, priobits, i; size_t len; unsigned int *prioptr;
   CldInfoFn ifn = (CldInfoFn)CmiHandlerToFunction(infofn);
   CldPackFn pfn;
   ifn(msg, &pfn, &len, &queueing, &priobits, &prioptr);
@@ -394,7 +394,7 @@ void CldEnqueueGroup(CmiGroup grp, void *msg, int infofn)
 
 void CldEnqueueMulti(int npes, int *pes, void *msg, int infofn)
 {
-  int len, queueing, priobits,i; unsigned int *prioptr;
+  int queueing, priobits, i; size_t len; unsigned int *prioptr;
   CldInfoFn ifn = (CldInfoFn)CmiHandlerToFunction(infofn);
   CldPackFn pfn;
   ifn(msg, &pfn, &len, &queueing, &priobits, &prioptr);
@@ -415,7 +415,7 @@ void CldEnqueueMulti(int npes, int *pes, void *msg, int infofn)
 
 void CldEnqueue(int pe, void *msg, int infofn)
 {
-  int len, queueing, priobits, avg; unsigned int *prioptr;
+  int queueing, priobits, avg; size_t len; unsigned int *prioptr;
   CldInfoFn ifn = (CldInfoFn)CmiHandlerToFunction(infofn);
   CldPackFn pfn;
 
@@ -475,7 +475,7 @@ void CldEnqueue(int pe, void *msg, int infofn)
 
 void CldNodeEnqueue(int node, void *msg, int infofn)
 {
-  int len, queueing, priobits, pe, avg; unsigned int *prioptr;
+  int queueing, priobits, pe, avg; size_t len; unsigned int *prioptr;
   CldInfoFn ifn = (CldInfoFn)CmiHandlerToFunction(infofn);
   CldPackFn pfn;
   if ((node == CLD_ANYWHERE) && (CmiNumPes() > 1)) {

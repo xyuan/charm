@@ -86,10 +86,10 @@ struct GroupDepNum
   operator int() const { return groupDepNum; }
 };
 #endif
-extern void* CkAllocMsg(int msgIdx, int msgBytes, int prioBits, GroupDepNum groupDepNum=GroupDepNum{});
+extern void* CkAllocMsg(int msgIdx, size_t msgBytes, int prioBits, GroupDepNum groupDepNum=GroupDepNum{});
 #endif
 extern void  CkFreeSysMsg(void *msg);
-extern void* CkAllocBuffer(void *msg, int bufsize);
+extern void* CkAllocBuffer(void *msg, size_t bufsize);
 extern void  CkFreeMsg(void *msg);
 extern void* CkCopyMsg(void **pMsg);
 extern void  CkSetQueueing(void *msg, int strategy);

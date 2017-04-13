@@ -375,7 +375,7 @@ methods for the message class \uw{CMessage\_mtype}. These methods have the
 prototypes:
 
 \begin{alltt}
-    static void* alloc(int msgnum, size_t size, int* array, int priobits);
+    static void* alloc(int msgnum, size_t size, size_t* array, int priobits);
     static void* pack(mtype*);
     static mtype* unpack(void*);
 \end{alltt}
@@ -392,7 +392,7 @@ method should actually allocate the message using \kw{CkAllocMsg}, whose
 signature is given below:
 
 \begin{alltt}
-void *CkAllocMsg(int msgnum, int size, int priobits); 
+void *CkAllocMsg(int msgnum, size_t size, int priobits);
 \end{alltt}  
 
 
@@ -403,9 +403,9 @@ methods for the \kw{VarsizeMessage} class above would be similar to:
 
 \begin{alltt}
 // allocate memory for varmessage so charm can keep track of memory
-static void* alloc(int msgnum, size_t size, int* array, int priobits)
+static void* alloc(int msgnum, size_t size, size_t* array, int priobits)
 \{
-  int totalsize, first_start, second_start;
+  size_t totalsize, first_start, second_start;
   // array is passed in when the message is allocated using new (see below).
   // size is the amount of space needed for the part of the message known
   // about at compile time.  Depending on their values, sometimes a segfault

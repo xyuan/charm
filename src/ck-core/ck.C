@@ -1354,7 +1354,7 @@ void _processHandler(void *converseMsg,CkCoreState *ck)
 
 /******************** Message Send **********************/
 
-void _infoFn(void *converseMsg, CldPackFn *pfn, int *len,
+void _infoFn(void *converseMsg, CldPackFn *pfn, size_t *len,
              int *queueing, int *priobits, unsigned int **prioptr)
 {
   envelope *env = (envelope *)converseMsg;
@@ -1468,7 +1468,7 @@ void _skipCldEnqueue(int pe,envelope *env, int infoFn)
   } else {
     if (pe < 0 || CmiNodeOf(pe) != CmiMyNode())
       CkPackMessage(&env);
-    int len=env->getTotalsize();
+    size_t len=env->getTotalsize();
     CmiSetXHandler(env,CmiGetHandler(env));
 #if CMK_OBJECT_QUEUE_AVAILABLE
     CmiSetHandler(env,index_objectQHandler);
@@ -1526,7 +1526,7 @@ static void _noCldEnqueueMulti(int npes, int *pes, envelope *env)
   }
 #endif
   CkPackMessage(&env);
-  int len=env->getTotalsize();
+  size_t len=env->getTotalsize();
   CmiSyncListSendAndFree(npes, pes, len, (char *)env);
 }
 
@@ -1552,7 +1552,7 @@ static void _noCldEnqueue(int pe, envelope *env)
 #endif
 
   CkPackMessage(&env);
-  int len=env->getTotalsize();
+  size_t len=env->getTotalsize();
   if (pe==CLD_BROADCAST) { CmiSyncBroadcastAndFree(len, (char *)env); }
   else if (pe==CLD_BROADCAST_ALL) { CmiSyncBroadcastAllAndFree(len, (char *)env); }
   else CmiSyncSendAndFree(pe, len, (char *)env);
@@ -1581,7 +1581,7 @@ void _noCldNodeEnqueue(int node, envelope *env)
   }
 #endif
   CkPackMessage(&env);
-  int len=env->getTotalsize();
+  size_t len=env->getTotalsize();
   if (node==CLD_BROADCAST) { 
 #if CMK_MESSAGE_LOGGING
 	if(env->flags & CK_FREE_MSG_MLOG)
@@ -2582,7 +2582,7 @@ private:
       bool wasPacked = (*envptr)->isPacked();
       if (!wasPacked) CkPackMessage(envptr);
       envelope *env = *envptr;
-      unsigned int crc1=0, crc2=0;
+      size_t crc1=0, crc2=0;
       if (_recplay_crc) {
         //unsigned int crc = crc32_initial(((unsigned char*)env)+CmiMsgHeaderSizeBytes, env->getTotalsize()-CmiMsgHeaderSizeBytes);
         crc1 = crc32_initial(((unsigned char*)env)+CmiMsgHeaderSizeBytes, sizeof(*env)-CmiMsgHeaderSizeBytes);
@@ -2591,7 +2591,7 @@ private:
         crc1 = checksum_initial(((unsigned char*)env)+CmiMsgHeaderSizeBytes, sizeof(*env)-CmiMsgHeaderSizeBytes);
         crc2 = checksum_initial(((unsigned char*)env)+sizeof(*env), env->getTotalsize()-sizeof(*env));
       }
-      curpos+=sprintf(&buffer[curpos],"%d %d %d %d %x %x %d\n",env->getSrcPe(),env->getTotalsize(),env->getEvent(), env->getMsgtype()==NodeBocInitMsg || env->getMsgtype()==ForNodeBocMsg, crc1, crc2, env->getEpIdx());
+      curpos+=sprintf(&buffer[curpos],"%d %zd %d %d %zd %zd %d\n",env->getSrcPe(),env->getTotalsize(),env->getEvent(), env->getMsgtype()==NodeBocInitMsg || env->getMsgtype()==ForNodeBocMsg, crc1, crc2, env->getEpIdx());
       if (curpos > _recplay_logsize-128) flushLog();
       if (!wasPacked) CkUnpackMessage(envptr);
     }

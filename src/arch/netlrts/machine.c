@@ -1650,10 +1650,10 @@ int DeliverOutgoingMessage(OutgoingMsg ogm)
 /**
  * Set up an OutgoingMsg structure for this message.
  */
-static OutgoingMsg PrepareOutgoing(int pe,int size,int freemode,char *data) {
+static OutgoingMsg PrepareOutgoing(int pe,size_t size,int freemode,char *data) {
   OutgoingMsg ogm;
   MallocOutgoingMsg(ogm);
-  MACHSTATE2(2,"Preparing outgoing message for pe %d, size %d",pe,size);
+  MACHSTATE2(2,"Preparing outgoing message for pe %d, size %zd",pe,size);
   ogm->size = size;
   ogm->data = data;
   ogm->src = CmiMyPeGlobal();
@@ -1676,8 +1676,8 @@ static OutgoingMsg PrepareOutgoing(int pe,int size,int freemode,char *data) {
  *
  *****************************************************************************/
 
-//CmiCommHandle CmiGeneralSend(int pe, int size, int freemode, char *data)
-CmiCommHandle LrtsSendFunc(int destNode, int pe, int size, char *data, int freemode)
+//CmiCommHandle CmiGeneralSend(int pe, size_t size, int freemode, char *data)
+CmiCommHandle LrtsSendFunc(int destNode, int pe, size_t size, char *data, int freemode)
 {
   int sendonnetwork;
   OutgoingMsg ogm;
@@ -1707,7 +1707,7 @@ CmiCommHandle LrtsSendFunc(int destNode, int pe, int size, char *data, int freem
  *
  ****************************************************************************/
                                                                                 
-void LrtsSyncListSendFn(int npes, int *pes, int len, char *msg)
+void LrtsSyncListSendFn(int npes, int *pes, size_t len, char *msg)
 {
   int i;
   for(i=0;i<npes;i++) {
@@ -1716,7 +1716,7 @@ void LrtsSyncListSendFn(int npes, int *pes, int len, char *msg)
   }
 }
                                                                                 
-CmiCommHandle LrtsAsyncListSendFn(int npes, int *pes, int len, char *msg)
+CmiCommHandle LrtsAsyncListSendFn(int npes, int *pes, size_t len, char *msg)
 {
   CmiError("ListSend not implemented.");
   return (CmiCommHandle) 0;
@@ -1727,7 +1727,7 @@ CmiCommHandle LrtsAsyncListSendFn(int npes, int *pes, int len, char *msg)
   returns is not changed, we can use memory reference trick to avoid 
   memory copying here
 */
-void LrtsFreeListSendFn(int npes, int *pes, int len, char *msg)
+void LrtsFreeListSendFn(int npes, int *pes, size_t len, char *msg)
 {
   int i;
   for(i=0;i<npes;i++) {
@@ -2277,7 +2277,7 @@ void machine_OffloadAPIProgress(void) {
 }
 #endif
 
-void LrtsPrepareEnvelope(char *msg, int size)
+void LrtsPrepareEnvelope(char *msg, size_t size)
 {
   CMI_MSG_SIZE(msg) = size;
 }

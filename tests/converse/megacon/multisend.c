@@ -63,7 +63,7 @@ void multisend_init(void)
 */
   {
     int m,i;
-    int sizes[nMulti];
+    size_t sizes[nMulti];
     char *msgs[nMulti];
     multisendmsg first; /* Allocate one message on the stack (because you can!) */
     for (m=0;m<nMulti;m++) {

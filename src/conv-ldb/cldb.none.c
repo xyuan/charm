@@ -19,7 +19,8 @@ const char *CldGetStrategy(void)
 
 void CldHandler(char *msg)
 {
-  int len, queueing, priobits;
+  int queueing, priobits;
+  size_t len;
   unsigned int *prioptr; CldInfoFn ifn; CldPackFn pfn;
   CldRestoreHandler((char *)msg);
   ifn = (CldInfoFn)CmiHandlerToFunction(CmiGetInfo(msg));
@@ -29,7 +30,7 @@ void CldHandler(char *msg)
 
 void CldEnqueueMulti(int npes, int *pes, void *msg, int infofn)
 {
-  int len, queueing, priobits,i; unsigned int *prioptr;
+  int queueing, priobits, i; size_t len; unsigned int *prioptr;
   CldInfoFn ifn = (CldInfoFn)CmiHandlerToFunction(infofn);
   CldPackFn pfn;
   ifn(msg, &pfn, &len, &queueing, &priobits, &prioptr);
@@ -52,7 +53,7 @@ void CldEnqueueMulti(int npes, int *pes, void *msg, int infofn)
 
 void CldEnqueue(int pe, void *msg, int infofn)
 {
-  int len, queueing, priobits; unsigned int *prioptr;
+  int queueing, priobits; size_t len; unsigned int *prioptr;
   CldInfoFn ifn = (CldInfoFn)CmiHandlerToFunction(infofn);
   CldPackFn pfn;
   if (pe == CLD_ANYWHERE) {
@@ -78,7 +79,7 @@ void CldEnqueue(int pe, void *msg, int infofn)
 
 void CldNodeEnqueue(int node, void *msg, int infofn)
 {
-  int len, queueing, priobits; unsigned int *prioptr;
+  int queueing, priobits; size_t len; unsigned int *prioptr;
   CldInfoFn ifn = (CldInfoFn)CmiHandlerToFunction(infofn);
   CldPackFn pfn;
   if (node == CLD_ANYWHERE) {

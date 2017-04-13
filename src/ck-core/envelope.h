@@ -5,6 +5,7 @@
 #ifndef _ENVELOPE_H
 #define _ENVELOPE_H
 
+#include <limits.h>
 #include <pup.h>
 #include <charm.h>
 #include <middle.h>
@@ -220,7 +221,7 @@ namespace ck {
   char   core[CmiReservedHeaderSize];                                          \
   UInt   pe;           /* source processor */                                  \
   ck::impl::u_type type; /* Depends on message type (attribs.mtype) */         \
-  UInt   totalsize;    /* Byte count from envelope start to end of group dependencies */ \
+  size_t totalsize;    /* Byte count from envelope start to end of group dependencies */ \
   CMK_ENVELOPE_OPTIONAL_FIELDS                                                 \
   CMK_REFNUM_TYPE ref; /* Used by futures and SDAG */                          \
   UShort priobits;     /* Number of bits of priority data after user data */   \
@@ -278,18 +279,18 @@ public:
 #endif
     UChar  getMsgIdx(void) const { return attribs.msgIdx; }
     void   setMsgIdx(const UChar idx) { attribs.msgIdx = idx; }
-    UInt   getTotalsize(void) const { return totalsize; }
-    void   setTotalsize(const UInt s) { totalsize = s; }
-    UInt   getUsersize(void) const { 
+    size_t getTotalsize(void) const { return totalsize; }
+    void   setTotalsize(const size_t s) { totalsize = s; }
+    size_t getUsersize(void) const {
       return totalsize - getGroupDepSize() - getPrioBytes() - sizeof(envelope); 
     }
-    void   setUsersize(const UInt s) {
+    void   setUsersize(const size_t s) {
       if (s == getUsersize()) {
         return;
       }
       CkAssert(s < getUsersize());
-      UInt newPrioOffset = sizeof(envelope) + CkMsgAlignLength(s);
-      UInt newTotalsize = newPrioOffset + getPrioBytes() + getGroupDepSize();
+      size_t newPrioOffset = sizeof(envelope) + CkMsgAlignLength(s);
+      size_t newTotalsize = newPrioOffset + getPrioBytes() + getGroupDepSize();
       void *newPrioPtr = (void *) ((char *) this + newPrioOffset); 
       // use memmove instead of memcpy in case memory areas overlap
       memmove(newPrioPtr, getPrioPtr(), getPrioBytes()); 
@@ -297,7 +298,7 @@ public:
     }
 
     // s specifies number of bytes to remove from user portion of message
-    void shrinkUsersize(const UInt s) {
+    void shrinkUsersize(const size_t s) {
       CkAssert(s <= getUsersize());
       setUsersize(getUsersize() - s);
     }
@@ -318,7 +319,7 @@ public:
     void* getGroupDepPtr(void) const {
       return (void *)((char *)this + totalsize - getGroupDepSize());
     }
-    static envelope *alloc(const UChar type, const UInt size=0, const UShort prio=0, const GroupDepNum groupDepNumRequest=GroupDepNum{})
+    static envelope *alloc(const UChar type, const size_t size=0, const UShort prio=0, const GroupDepNum groupDepNumRequest=GroupDepNum{})
     {
       CkAssert(type>=NewChareMsg && type<=ForArrayEltMsg);
 #if CMK_USE_STL_MSGQ
@@ -326,10 +327,10 @@ public:
       CkAssert(sizeof(CMK_MSG_PRIO_TYPE) >= sizeof(int)*CkPriobitsToInts(prio));
 #endif
 
-      UInt tsize = sizeof(envelope)+ 
-                   CkMsgAlignLength(size)+
-                   sizeof(int)*CkPriobitsToInts(prio) +
-                   sizeof(CkGroupID)*(int)groupDepNumRequest;
+      size_t tsize = sizeof(envelope)+
+                     CkMsgAlignLength(size)+
+                     sizeof(int)*CkPriobitsToInts(prio) +
+                     sizeof(CkGroupID)*(int)groupDepNumRequest;
 
       //CkPrintf("[%d] inside envelope alloc groupDepNum:%d\n", CkMyPe(), (int)groupDepNumRequest);
 
@@ -507,11 +508,11 @@ inline void *EnvToUsr(const envelope *const env) {
   return (void *)((intptr_t)env + sizeof(envelope));
 }
 
-inline envelope *_allocEnv(const int msgtype, const int size=0, const int prio=0, const GroupDepNum groupDepNum=GroupDepNum{}) {
+inline envelope *_allocEnv(const int msgtype, const size_t size=0, const int prio=0, const GroupDepNum groupDepNum=GroupDepNum{}) {
   return envelope::alloc(msgtype,size,prio,groupDepNum);
 }
 
-inline void *_allocMsg(const int msgtype, const int size, const int prio=0, const GroupDepNum groupDepNum=GroupDepNum{}) {
+inline void *_allocMsg(const int msgtype, const size_t size, const int prio=0, const GroupDepNum groupDepNum=GroupDepNum{}) {
   return EnvToUsr(envelope::alloc(msgtype,size,prio,groupDepNum));
 }
 

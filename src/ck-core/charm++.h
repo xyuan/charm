@@ -1158,10 +1158,10 @@ public:
 
 class CkQdMsg {
   public:
-    void *operator new(size_t s) { return CkAllocMsg(0,(int)s,0,GroupDepNum{}); }
+    void *operator new(size_t s) { return CkAllocMsg(0,s,0,GroupDepNum{}); }
     void operator delete(void* ptr) { CkFreeMsg(ptr); }
-    static void *alloc(int, size_t s, int*, int, int) {
-      return CkAllocMsg(0,(int)s,0,GroupDepNum{});
+    static void *alloc(int, size_t s, size_t*, int, int) {
+      return CkAllocMsg(0,s,0,GroupDepNum{});
     }
     static void *pack(CkQdMsg *m) { return (void*) m; }
     static CkQdMsg *unpack(void *buf) { return (CkQdMsg*) buf; }
@@ -1234,8 +1234,8 @@ if(CpvAccess(networkProgressCount) >=  p)  \
 
 
 
-CkMarshallMsg *CkAllocateMarshallMsgNoninline(int size,const CkEntryOptions *opts);
-inline CkMarshallMsg *CkAllocateMarshallMsg(int size,const CkEntryOptions *opts=NULL)
+CkMarshallMsg *CkAllocateMarshallMsgNoninline(size_t size,const CkEntryOptions *opts);
+inline CkMarshallMsg *CkAllocateMarshallMsg(size_t size,const CkEntryOptions *opts=NULL)
 {
 	if (opts==NULL) {
 	  CkMarshallMsg *newMemory = new (size,0)CkMarshallMsg;
@@ -1252,7 +1252,7 @@ inline CkMarshallMsg *CkAllocateMarshallMsg(int size,const CkEntryOptions *opts=
 
 
 template <typename T> 
-inline T *CkAllocateMarshallMsgT(int size,const CkEntryOptions *opts) 
+inline T *CkAllocateMarshallMsgT(size_t size,const CkEntryOptions *opts)
 { 
   int priobits = 0; 
   if (opts!=NULL) priobits = opts->getPriorityBits(); 

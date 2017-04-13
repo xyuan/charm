@@ -704,7 +704,7 @@ char *BgCloneMsg(char *msg)
 char *BgExpandMsg(char *msg)
 {
   char *origmsg = *(char **)(msg + CmiBlueGeneMsgHeaderSizeBytes);
-  int size = CmiBgMsgLength(origmsg);
+  size_t size = CmiBgMsgLength(origmsg);
   char *dupmsg = (char *)CmiAlloc(size);
   memcpy(dupmsg, msg, CmiBlueGeneMsgHeaderSizeBytes);
   memcpy(dupmsg+CmiBlueGeneMsgHeaderSizeBytes, origmsg+CmiBlueGeneMsgHeaderSizeBytes, size-CmiBlueGeneMsgHeaderSizeBytes);
@@ -792,7 +792,7 @@ static int bg_streaming = 0;
 class BgStreaming {
 public:
   char **streamingMsgs;
-  int  *streamingMsgSizes;
+  size_t *streamingMsgSizes;
   int count;
   int totalWorker;
   int pe;
@@ -813,9 +813,9 @@ public:
   void init(int nNodes) {
     totalWorker = nNodes * BgGetNumWorkThread();
     streamingMsgs = new char *[totalWorker];
-    streamingMsgSizes = new int [totalWorker];
+    streamingMsgSizes = new size_t [totalWorker];
   }
-  void depositMsg(int p, int size, char *m) {
+  void depositMsg(int p, size_t size, char *m) {
     streamingMsgs[count] = m;
     streamingMsgSizes[count] = size;
     count ++;
@@ -843,7 +843,7 @@ void BgEndStreaming()
   bg_streaming = 0;
 }
 
-void CmiSendPacketWrapper(int pe, int msgSize,char *msg, int streaming)
+void CmiSendPacketWrapper(int pe, size_t msgSize,char *msg, int streaming)
 {
   if (streaming && pe != CmiMyPe())
     bgstreaming.depositMsg(pe, msgSize, msg);
@@ -852,7 +852,7 @@ void CmiSendPacketWrapper(int pe, int msgSize,char *msg, int streaming)
 }
 
 
-void CmiSendPacket(int x, int y, int z, int msgSize,char *msg)
+void CmiSendPacket(int x, int y, int z, size_t msgSize,char *msg)
 {
 //  CmiSyncSendAndFree(nodeInfo::XYZ2RealPE(x,y,z),msgSize,(char *)msg);
 #if !DELAY_SEND
@@ -2303,7 +2303,7 @@ int BgIsReplay()
     return cva(bgMach).replay != -1 || cva(bgMach).replaynode != -1;
 }
 
-extern "C" void CkReduce(void *msg, int size, CmiReduceMergeFn mergeFn) {
+extern "C" void CkReduce(void *msg, size_t size, CmiReduceMergeFn mergeFn) {
   ((workThreadInfo*)cta(threadinfo))->reduceMsg = msg;
   //CmiPrintf("Called CkReduce from %d %hd\n",CmiMyPe(),cta(threadinfo)->globalId);
   int numLocal = 0, count = 0;

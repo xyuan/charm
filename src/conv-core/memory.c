@@ -186,11 +186,11 @@ static char *memory_lifeRaft=NULL;
 
 void CmiOutOfMemoryInit(void);
 
-void CmiOutOfMemory(int nBytes)
+void CmiOutOfMemory(size_t nBytes)
 { /* We're out of memory: free up the liferaft memory and abort */
   char errMsg[200];
   if (memory_lifeRaft) free(memory_lifeRaft);
-  if (nBytes>0) sprintf(errMsg,"Could not malloc() %d bytes--are we out of memory? (used :%.3fMB)",nBytes,CmiMemoryUsage()/1000000.0);
+  if (nBytes>0) sprintf(errMsg,"Could not malloc() %zd bytes--are we out of memory? (used :%.3fMB)",nBytes,CmiMemoryUsage()/1000000.0);
   else sprintf(errMsg,"Could not malloc()--are we out of memory? (used: %.3fMB)", CmiMemoryUsage()/1000000.0);
   CmiAbort(errMsg);
 }
