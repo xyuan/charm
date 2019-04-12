@@ -12,13 +12,17 @@ mainmodule jacobi2d {
   mainchare Main {
     entry Main(CkArgMsg *m);
     entry void done(int totalIter);
+    entry void start(CkReductionMsg* msg);
   };
 
   array [2D] Jacobi {
     entry Jacobi(void);
+    entry void debug(void);
     entry void begin_iteration(void);
     entry void receiveGhosts(int iter, int dir, int size, double ghosts[size]);
+#if !defined PERF
     entry [reductiontarget] void recvConvergeResult(bool result);
+#endif // PERF
 
     entry void run() {
       while (!converged && iterations < maxiterations) {
@@ -34,6 +38,7 @@ mainmodule jacobi2d {
         }
         serial "compute" { 
           check_and_compute();
+#if !defined PERF
         }
         serial "compute_converge" {
           bool conv = (max_error <= THRESHOLD);
@@ -42,9 +47,17 @@ mainmodule jacobi2d {
         }
         when recvConvergeResult(bool result) serial "check_converge"{
           converged = result;
-        if ((result || iterations>=maxiterations)  && thisIndex.x +thisIndex.y == 0) mainProxy.done(iterations);
-      }
+#else // PERF
+          bool result = false;
+#endif // PERF
+          if ((result || iterations>=maxiterations)  && thisIndex.x +thisIndex.y == 0) mainProxy.done(iterations);
+        }
       }
     };
+
+  };
+
+  group SetThreads {
+    entry SetThreads(int numThreads);
   };
 };

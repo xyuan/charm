@@ -7,6 +7,11 @@
 
 #include "jacobi2d.decl.h"
 
+#if defined OMP
+#include <omp.h>
+// do we need sched header?
+#endif // OMP
+
 // See README for documentation
 
 /*readonly*/ CProxy_Main mainProxy;
@@ -39,17 +44,17 @@ const double THRESHOLD   =  0.004;
 class Main : public CBase_Main {
 
   double startTime;
-  double endTime;
 
 public:
   CProxy_Jacobi array;
   double max_error;
   Main(CkArgMsg* m) {
-    if ( (m->argc < 3) || (m->argc > 6)) {
+    if ( (m->argc < 3) || (m->argc > 7)) {
       CkPrintf("%s [array_size] [block_size]\n", m->argv[0]);
       CkPrintf("OR %s [array_size] [block_size] maxiterations\n", m->argv[0]);
       CkPrintf("OR %s [array_size_X] [array_size_Y] [block_size_X] [block_size_Y] \n", m->argv[0]);
       CkPrintf("OR %s [array_size_X] [array_size_Y] [block_size_X] [block_size_Y] maxiterations\n", m->argv[0]);
+      CkPrintf("OR %s [array_size_X] [array_size_Y] [block_size_X] [block_size_Y] maxiterations numthreads\n", m->argv[0]);
       CkAbort("Abort");
     }
 
@@ -69,8 +74,13 @@ public:
     maxiterations = MAX_ITER;
     if(m->argc==4)
       maxiterations = atoi(m->argv[3]); 
-    if(m->argc==6)
+    if(m->argc==6 || m->argc == 7)
       maxiterations = atoi(m->argv[5]); 
+
+    int numthreads = 1;
+    if (m->argc == 7) {
+      numthreads = atoi(m->argv[6]);
+    }
 
     if (arrayDimX < blockDimX || arrayDimX % blockDimX != 0)
       CkAbort("array_size_X % block_size_X != 0!");
@@ -88,8 +98,16 @@ public:
     CkPrintf("Threshold %.10g\n", THRESHOLD);
 
     array = CProxy_Jacobi::ckNew(num_chare_x, num_chare_y);
+
+#if defined OMP
+    CProxy_SetThreads::ckNew(numthreads);
+#else // OMP
+    // start measuring execution time
+    startTime = CkWallTimer();
+
     // start computation
     array.run();
+#endif // OMP
   }
 
   void done(int totalIter) {
@@ -98,6 +116,18 @@ public:
     else
       CkPrintf("Finish due to convergence, iterations %d, total time %.3f seconds. \n", totalIter, CkWallTimer()-startTime); 
     CkExit();
+  }
+
+  void start(CkReductionMsg* msg) {
+#if defined DEBUG
+    array.debug();
+#else // DEBUG
+    // start measuring execution time
+    startTime = CkWallTimer();
+
+    // start computation
+    array.run();
+#endif // DEBUG
   }
 };
 
@@ -290,6 +320,7 @@ public:
 
       max_error = 0.;
       // When all neighbor values have been received, we update our values and proceed
+      #pragma omp parallel for private(temperatureIth, difference) collapse(2) schedule(static)
       for(int i=istart; i<ifinish; ++i) {
         for(int j=jstart; j<jfinish; ++j) {
           temperatureIth=(temperature[i][j] 
@@ -298,11 +329,13 @@ public:
             +  temperature[i][j-1]
             +  temperature[i][j+1]) * 0.2;
 
+#if !defined PERF
           // update relative error
           difference = temperatureIth-temperature[i][j];
           // fix sign without fabs overhead
           if(difference<0) difference *= -1.0; 
           max_error=(max_error>difference) ? max_error : difference;
+#endif // PERF
           new_temperature[i][j] = temperatureIth;
         }
       }
@@ -354,7 +387,41 @@ public:
         CkPrintf("\n");
       }
     }
+
+    void debug() {
+      #pragma omp parallel
+      {
+        CkPrintf("[%d]: %d:%d\n", thisIndex, CkMyPe(), sched_getcpu());
+      }
+
+      contribute(CkCallback(CkCallback::ckExit));
+    }
 };
 
+/** \class SetThreads
+ *
+ */
+class SetThreads : public CBase_SetThreads {
+public:
+  SetThreads(int numThreads) {
+    cpu_set_t set;
+    CPU_ZERO(&set);
+
+    for (int i = thisIndex * numThreads; i < (thisIndex + 1) * numThreads; i++) {
+      CPU_SET(i, &set);
+    }
+
+    if (sched_setaffinity(0, sizeof(cpu_set_t), &set)) {
+      CkAbort("Error setting affinity.\n");
+    }
+
+#if defined OMP
+    omp_set_num_threads(numThreads);
+#endif // OMP
+
+    CkCallback cb(CkIndex_Main::start(NULL), mainProxy);
+    contribute(cb);
+  }
+};
 
 #include "jacobi2d.def.h"

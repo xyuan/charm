@@ -2,6 +2,15 @@
 OPTS	= -O3
 CHARMC	= ../../../bin/charmc $(OPTS)
 
+# Optimized
+OPTS += -DPERF
+
+# OMP
+#OPTS += -DOMP -fopenmp
+
+# Debug OMP
+#OPTS += -DDEBUG
+
 OBJS = jacobi2d.o
 
 all: jacobi2d
