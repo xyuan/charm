@@ -58,6 +58,6 @@ mainmodule jacobi2d {
   };
 
   group SetThreads {
-    entry SetThreads(int numThreads);
+    entry SetThreads(int numThreads, int spread);
   };
 };

@@ -49,12 +49,13 @@ public:
   CProxy_Jacobi array;
   double max_error;
   Main(CkArgMsg* m) {
-    if ( (m->argc < 3) || (m->argc > 7)) {
+    if ( (m->argc < 3) || (m->argc > 8)) {
       CkPrintf("%s [array_size] [block_size]\n", m->argv[0]);
       CkPrintf("OR %s [array_size] [block_size] maxiterations\n", m->argv[0]);
       CkPrintf("OR %s [array_size_X] [array_size_Y] [block_size_X] [block_size_Y] \n", m->argv[0]);
       CkPrintf("OR %s [array_size_X] [array_size_Y] [block_size_X] [block_size_Y] maxiterations\n", m->argv[0]);
       CkPrintf("OR %s [array_size_X] [array_size_Y] [block_size_X] [block_size_Y] maxiterations numthreads\n", m->argv[0]);
+      CkPrintf("OR %s [array_size_X] [array_size_Y] [block_size_X] [block_size_Y] maxiterations numthreads spread\n", m->argv[0]);
       CkAbort("Abort");
     }
 
@@ -74,12 +75,17 @@ public:
     maxiterations = MAX_ITER;
     if(m->argc==4)
       maxiterations = atoi(m->argv[3]); 
-    if(m->argc==6 || m->argc == 7)
+    if(m->argc > 5)
       maxiterations = atoi(m->argv[5]); 
 
     int numthreads = 1;
-    if (m->argc == 7) {
+    if (m->argc > 6) {
       numthreads = atoi(m->argv[6]);
+    }
+
+    int spread = 1;
+    if (m->argc > 7) {
+      spread = atoi(m->argv[7]);
     }
 
     if (arrayDimX < blockDimX || arrayDimX % blockDimX != 0)
@@ -100,7 +106,7 @@ public:
     array = CProxy_Jacobi::ckNew(num_chare_x, num_chare_y);
 
 #if defined OMP
-    CProxy_SetThreads::ckNew(numthreads);
+    CProxy_SetThreads::ckNew(numthreads, spread);
 #else // OMP
     // start measuring execution time
     startTime = CkWallTimer();
@@ -403,11 +409,13 @@ public:
  */
 class SetThreads : public CBase_SetThreads {
 public:
-  SetThreads(int numThreads) {
+  SetThreads(int numThreads, int spread) {
+
     cpu_set_t set;
     CPU_ZERO(&set);
 
-    for (int i = thisIndex * numThreads; i < (thisIndex + 1) * numThreads; i++) {
+    for (int i = thisIndex       * numThreads * spread;
+             i < (thisIndex + 1) * numThreads * spread; i += spread) {
       CPU_SET(i, &set);
     }
 
