@@ -410,12 +410,13 @@ public:
 class SetThreads : public CBase_SetThreads {
 public:
   SetThreads(int numThreads, int spread) {
+    int myIdx = CmiPhysicalRank(CmiMyPe());
 
     cpu_set_t set;
     CPU_ZERO(&set);
 
-    for (int i = thisIndex       * numThreads * spread;
-             i < (thisIndex + 1) * numThreads * spread; i += spread) {
+    for (int i =  myIdx      * numThreads * spread;
+             i < (myIdx + 1) * numThreads * spread; i += spread) {
       CPU_SET(i, &set);
     }
 
