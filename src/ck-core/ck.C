@@ -1788,6 +1788,8 @@ static inline envelope *_prepareImmediateMsgBranch(int eIdx,void *msg,CkGroupID 
 static inline void _sendMsgBranch(int eIdx, void *msg, CkGroupID gID,
                   int pe=CLD_BROADCAST_ALL, int opts = 0)
 {
+
+  CkPrintf("[%d][%d][%d] sendMsgBranch and pe is  %d\n", CkMyPe(), CkMyNode(), CkMyRank(), pe);
   int numPes;
   envelope *env;
     if (opts & CK_MSG_IMMEDIATE) {

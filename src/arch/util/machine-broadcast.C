@@ -165,9 +165,11 @@ static void SendSpanningChildren(int size, char *msg, int rankToAssign, int star
       if (startNode == 0) {
         child_count = _topoTree->child_count;
         children    = _topoTree->children;
+        CmiPrintf("[%d][%d][%d] Root is Zero and root is %d, child_count =%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), startNode, child_count);
         //CmiPrintf("[%d][%d] SendSpanningChildren child count%d \n", CmiMyPe(), CmiMyNode(), child_count);
       } else {
         get_topo_tree_nbs(startNode, &parent, &child_count, &children);
+        CmiPrintf("[%d][%d][%d] Root is nonZero and root is %d, parent=%d, child_count =%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), startNode, parent,child_count);
       }
       for (i=0; i < child_count; i++) {
         int nd = children[i];

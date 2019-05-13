@@ -43,10 +43,12 @@ class tester : public CBase_tester {
       srcBuffer = new int[SIZE];
       assignValuesToConstant(srcBuffer, SIZE, CONSTANT);
 
+      CkPrintf("[%d][%d][%d] bcasting from\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
+      arrProxy.recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, true);
       // Test p2p sends
-      arrProxy[9].recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, false);
-      grpProxy[CkNumPes() - 1].recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, false);
-      ngProxy[CkNumNodes() - 1].recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, false);
+      //arrProxy[9].recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, false);
+      //grpProxy[CkNumPes() - 1].recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, false);
+      //ngProxy[CkNumNodes() - 1].recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, false);
     }
 
     void p2pDone() {
@@ -54,9 +56,9 @@ class tester : public CBase_tester {
         counter = 0;
 
         // Test bcast sends
-        arrProxy.recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, true);
-        grpProxy.recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, true);
-        ngProxy.recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, true);
+        //arrProxy.recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, true);
+        //grpProxy.recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, true);
+        //ngProxy.recv_zerocopy(CkSendBuffer(srcBuffer), SIZE, true);
       }
     }
 
@@ -81,7 +83,7 @@ class arr1 : public CBase_arr1 {
     void recv_zerocopy(int *&buffer, size_t &size, bool isBcast, CkNcpyBufferPost *ncpyPost) {
       buffer = destBuffer;
       if(isBcast) {
-        size = SIZE/2;
+        //size = SIZE/2;
       } else {
         size = SIZE/4;
       }
@@ -89,8 +91,10 @@ class arr1 : public CBase_arr1 {
 
     void recv_zerocopy(int *buffer, size_t size, bool isBcast) {
       if(isBcast) {
-        verifyValuesWithConstant(destBuffer, SIZE/2, CONSTANT);
-        verifyValuesWithIndex(destBuffer, SIZE, SIZE/2);
+        verifyValuesWithConstant(destBuffer, SIZE, CONSTANT);
+
+        //verifyValuesWithConstant(destBuffer, SIZE/2, CONSTANT);
+        //verifyValuesWithIndex(destBuffer, SIZE, SIZE/2);
 
         CkCallback doneCb = CkCallback(CkReductionTarget(tester, bcastDone), chareProxy);
         contribute(doneCb);

@@ -67,6 +67,15 @@
 #define CMI_IS_ZC_RECV(msg)                  (CMI_ZC_MSGTYPE(msg) == CMK_ZC_P2P_RECV_MSG || CMI_ZC_MSGTYPE(msg) == CMK_ZC_BCAST_RECV_MSG)
 #endif
 
+/* Root of broadcast:
+ * non-bcast msg: root = 0;
+ * proc-level bcast msg: root >=1; (CmiMyPe()+1)
+ * node-level bcast msg: root <=-1; (-CmiMyNode()-1)
+ */
+#define CMI_BROADCAST_ROOT(msg)          ((CmiMsgHeaderBasic *)msg)->root
+#define CMI_SET_BROADCAST_ROOT(msg, root)  CMI_BROADCAST_ROOT(msg) = (root);
+
+
 #define CMIALIGN(x,n)       (size_t)((~((size_t)n-1))&((x)+(n-1)))
 /*#define ALIGN8(x)        (size_t)((~7)&((x)+7)) */
 #define ALIGN8(x)          CMIALIGN(x,8)
