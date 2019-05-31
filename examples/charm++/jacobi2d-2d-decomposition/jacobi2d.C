@@ -263,6 +263,9 @@ public:
 #if defined BIGSIM
       startTraceBigSim();
 #endif // defined BIGSIM
+#if defined ITERATION
+      if (thisIndex.x + thisIndex.y == 0) CkPrintf("Iteration %d\n", iterations);
+#endif // defined ITERATION
       iterations++;
 
       if(!leftBound)

@@ -14,6 +14,9 @@ OPTS += -DPERF
 # Generate BigSim Traces
 #OPTS += -DBIGSIM
 
+# Print iteration number
+#OPTS += -DITERATION
+
 OBJS = jacobi2d.o
 
 all: jacobi2d
