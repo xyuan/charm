@@ -11,6 +11,9 @@ OPTS += -DPERF
 # Debug OMP
 #OPTS += -DDEBUG
 
+# Generate BigSim Traces
+#OPTS += -DBIGSIM
+
 OBJS = jacobi2d.o
 
 all: jacobi2d

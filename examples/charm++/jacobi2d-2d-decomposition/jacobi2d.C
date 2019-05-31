@@ -12,6 +12,10 @@
 // do we need sched header?
 #endif // OMP
 
+#if defined BIGSIM
+#include "cktiming.h"
+#endif // defined BIGSIM
+
 // See README for documentation
 
 /*readonly*/ CProxy_Main mainProxy;
@@ -256,6 +260,9 @@ public:
 
     // Send ghost faces to the six neighbors
     void begin_iteration(void) {
+#if defined BIGSIM
+      startTraceBigSim();
+#endif // defined BIGSIM
       iterations++;
 
       if(!leftBound)
@@ -290,9 +297,15 @@ public:
         thisProxy(thisIndex.x, thisIndex.y+1).receiveGhosts(iterations, TOP, blockDimX, bottomGhost);
         delete [] bottomGhost;
       }
+#if defined BIGSIM
+      endTraceBigSim("begin_iteration", iterations, 0.);
+#endif // defined BIGSIM
     }
 
     void processGhosts(int dir, int size, double gh[]) {
+#if defined BIGSIM
+      startTraceBigSim();
+#endif // defined BIGSIM
       switch(dir) {
       case LEFT:
         for(int j=0; j<size; ++j) {
@@ -317,9 +330,15 @@ public:
       default:
         CkAbort("ERROR\n");
       }
+#if defined BIGSIM
+      endTraceBigSim("processGhost", iterations, dir, size);
+#endif // defined BIGSIM
     }
 
     void check_and_compute() {
+#if defined BIGSIM
+      startTraceBigSim();
+#endif // defined BIGSIM
       double temperatureIth = 0.;
       double difference = 0.;
       double **tmp;
@@ -350,6 +369,9 @@ public:
       temperature = new_temperature;
       new_temperature = tmp;
       //dumpMatrix(temperature);
+#if defined BIGSIM
+      endTraceBigSim("check_and_compute", iterations, max_error);
+#endif // defined BIGSIM
     }
 
     // Enforce some boundary conditions
