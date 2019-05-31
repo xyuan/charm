@@ -11,7 +11,11 @@ mainmodule jacobi2d {
 
   mainchare Main {
     entry Main(CkArgMsg *m);
+#if !defined PERF
     entry void done(int totalIter);
+#else // PERF
+    entry [reductiontarget] void done(int totalIter);
+#endif // PERF
     entry void start(CkReductionMsg* msg);
   };
 
@@ -38,8 +42,8 @@ mainmodule jacobi2d {
         }
         serial "compute" { 
           check_and_compute();
-#if !defined PERF
         }
+#if !defined PERF
         serial "compute_converge" {
           bool conv = (max_error <= THRESHOLD);
           CkCallback cb(CkReductionTarget(Jacobi, recvConvergeResult), thisProxy);
@@ -47,11 +51,16 @@ mainmodule jacobi2d {
         }
         when recvConvergeResult(bool result) serial "check_converge"{
           converged = result;
-#else // PERF
-          bool result = false;
-#endif // PERF
           if ((result || iterations>=maxiterations)  && thisIndex.x +thisIndex.y == 0) mainProxy.done(iterations);
         }
+#else // PERF
+        serial "compute_converge" {
+          if (iterations >= maxiterations) {
+            CkCallback cb(CkReductionTarget(Main, done), mainProxy);
+            contribute(sizeof(int), &iterations, CkReduction::min_int, cb);
+          }
+        }
+#endif // PERF
       }
     };
 
