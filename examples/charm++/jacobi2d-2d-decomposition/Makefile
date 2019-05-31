@@ -1,5 +1,6 @@
 -include ../../common.mk
 OPTS	= -O3
+#OPTS	= -O0 -g
 CHARMC	= ../../../bin/charmc $(OPTS)
 
 # Optimized
