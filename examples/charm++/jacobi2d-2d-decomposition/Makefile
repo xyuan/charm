@@ -3,6 +3,9 @@ OPTS	= -O3
 #OPTS	= -O0 -g
 CHARMC	= ../../../bin/charmc $(OPTS)
 
+# Pin threads inside program
+OPTS += -DAFFINITY
+
 # Optimized
 OPTS += -DPERF
 

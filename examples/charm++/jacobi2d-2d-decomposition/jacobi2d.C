@@ -109,15 +109,15 @@ public:
 
     array = CProxy_Jacobi::ckNew(num_chare_x, num_chare_y);
 
-#if defined OMP
+#if defined AFFINITY
     CProxy_SetThreads::ckNew(numthreads, spread);
-#else // OMP
+#else // AFFINITY
     // start measuring execution time
     startTime = CkWallTimer();
 
     // start computation
     array.run();
-#endif // OMP
+#endif // AFFINITY
   }
 
   void done(int totalIter) {
