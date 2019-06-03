@@ -20,9 +20,11 @@ void MPISendOrRecvOneBuffer(SMSG_LIST *smsg, int tag){
 #endif
 
   if(smsg->type == ONESIDED_BUFFER_DIRECT_SEND || smsg->type == ONESIDED_BUFFER_SEND) {
+    CmiPrintf("[%d][%d][%d] Posting MPI_Send with size:%d, tag:%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), size, tag);
     if (MPI_SUCCESS != MPI_Isend((void *)msg, size, MPI_BYTE, dstrank, tag, charmComm, &(smsg->req)))
       CmiAbort("LrtsSendBuffer: MPI_Isend failed!\n");
   } else if(smsg->type == ONESIDED_BUFFER_DIRECT_RECV || smsg->type == ONESIDED_BUFFER_RECV) {
+    CmiPrintf("[%d][%d][%d] Posting MPI_Recv with size:%d, tag:%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), size, tag);
     if (MPI_SUCCESS != MPI_Irecv((void *)msg, size, MPI_BYTE, dstrank, tag, charmComm, &(smsg->req)))
       CmiAbort("LrtsSendBuffer: MPI_Irecv failed!\n");
   } else {
