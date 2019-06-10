@@ -127,10 +127,17 @@ class zerocopyObject : public CBase_zerocopyObject{
       // sdagRun only uses iArr1 and dArr2
       // other others needn't be pupped/unpupped
       if (p.isUnpacking()){
+        //CkPrintf("[%d][%d][%d] Unpacking Iter=%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), iter);
         iArr1 = (int *)CkRdmaAlloc(iSize1 * sizeof(int));
         dArr2 = (double *)CkRdmaAlloc(dSize2 * sizeof(double));
         j=0;
         firstMigrationPending = false;
+
+        CkAssert(sdagZeroCopySentCounter == 0);
+        CkAssert(sdagZeroCopyRecvCounter == 0);
+      }
+      if (p.isPacking()) {
+        //CkPrintf("[%d][%d][%d] Packing Iter=%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), iter);
       }
       p(iArr1, iSize1);
       p(dArr2, dSize2);
@@ -173,8 +180,10 @@ class zerocopyObject : public CBase_zerocopyObject{
       sdagZeroCopySentCounter++;
 
       // check that all sends and recvs have completed and then advance
-      if(sdagZeroCopySentCounter == 2*num && sdagZeroCopyRecvCounter == num)
+      if(sdagZeroCopySentCounter == 2*num && sdagZeroCopyRecvCounter == num) {
+        //CkPrintf("[%d][%d][%d] Calling next step from cb iter=%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), iter);
         nextStep();
+      }
     }
 
     void testZeroCopy(CProxy_Main mProxy){
@@ -257,6 +266,8 @@ class zerocopyObject : public CBase_zerocopyObject{
       sdagZeroCopyRecvCounter = 0;
       sdagZeroCopySentCounter = 0;
 
+//      CkPrintf("[%d][%d][%d] nextStep reached Iter=%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), iter);
+
       if(thisIndex == 0)
           CkPrintf("sdagRun: Iteration %d completed\n", iter);
 
@@ -264,8 +275,10 @@ class zerocopyObject : public CBase_zerocopyObject{
       iter++;
 
       //load balance
-      if(iter % LBPERIOD_ITER == 0)
+      if(iter % LBPERIOD_ITER == 0) {
+        //CkPrintf("[%d][%d][%d][%d] Atsync %d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), thisIndex, iter);
         AtSync();
+      }
       else if(iter <= MAX_ITER)
         thisProxy[thisIndex].sdagRun();
       else {

@@ -19,6 +19,7 @@ static inline void UcxMemMap(UcxRdmaInfo *info, void *ptr, int size)
     memParams.length     = size;
     memParams.address    = ptr;
 
+//    CmiPrintf("[%d][%d][%d] REG \n", CmiMyPe(), CmiMyNode(), CmiMyRank());
     status = ucp_mem_map(ucxCtx.context, &memParams, &(info->memh));
     UCX_CHECK_STATUS(status, "ucp_mem_map");
 
@@ -71,6 +72,7 @@ void LrtsDeregisterMem(const void *ptr, void *info, int pe, unsigned short int m
     UCX_LOG(4, " %p, PE %d, info %p, memh %d", ptr, pe, ucxInfo, ucxInfo->memh);
 
     if ((mode != CMK_BUFFER_NOREG) && (ucxInfo->memh)) {
+        //CmiPrintf("[%d][%d][%d] DEREG \n", CmiMyPe(), CmiMyNode(), CmiMyRank());
         status = ucp_mem_unmap(ucxCtx.context, ucxInfo->memh);
         UCX_CHECK_STATUS(status, "ucp_mem_unmap");
     }
@@ -124,9 +126,13 @@ void UcxRmaOp(NcpyOperationInfo *ncpyOpInfo, int op)
 // Perform an RDMA Get call into the local destination address from the remote source address
 void LrtsIssueRget(NcpyOperationInfo *ncpyOpInfo)
 {
+
+//   CmiPrintf("[%d][%d][%d] LrtsIssueRget opMode=%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), ncpyOpInfo->opMode);
     UCX_LOG(4, "srcPE %d destPE %d ", ncpyOpInfo->srcPe, ncpyOpInfo->destPe);
 
+    //if (ncpyOpInfo->isSrcRegistered != 0 && (ncpyOpInfo->opMode != CMK_EM_API)) {
     if (ncpyOpInfo->isSrcRegistered != 0) {
+        //CmiAbort("non reverse operation\n");
         UcxRmaOp(ncpyOpInfo, UCX_RMA_OP_GET);
     } else {
         // Remote buffer is not registered, ask peer to perform put

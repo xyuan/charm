@@ -32,8 +32,10 @@ mainmodule simpleZeroCopy {
             compareArray(ptr2, dArr2, n2);
 
             // check that all sends and recvs have completed and then advance
-            if(sdagZeroCopySentCounter == 2*num && sdagZeroCopyRecvCounter == num)
+            if(sdagZeroCopySentCounter == 2*num && sdagZeroCopyRecvCounter == num) {
+              //CkPrintf("[%d][%d][%d] Calling next step from sdag em iter=%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), iter);
               nextStep();
+            }
           }
         }
       }

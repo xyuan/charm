@@ -749,10 +749,11 @@ void getRdmaNumopsAndBufsize(envelope *env, int &numops, int &bufsize) {
 }
 
 void handleEntryMethodApiCompletion(NcpyOperationInfo *info) {
+  //CmiAbort("handleEntryMethodApiCompletion\n");
 
 #if CMK_REG_REQUIRED
   // send a message to the source to de-register and invoke callback
-  if(info->srcDeregMode == CK_BUFFER_DEREG)
+  if(info->isSrcRegistered == 1 && info->srcDeregMode == CK_BUFFER_DEREG)
     CmiInvokeRemoteDeregAckHandler(info->srcPe, info);
   else // Do not de-register source when srcDeregMode != CK_BUFFER_DEREG
 #endif
@@ -773,10 +774,16 @@ void handleReverseEntryMethodApiCompletion(NcpyOperationInfo *info) {
 
 #if CMK_REG_REQUIRED
   // De-register source only when srcDeregMode == CK_BUFFER_DEREG
-  if(info->srcDeregMode == CK_BUFFER_DEREG) {
+  if(info->isSrcRegistered == 1 && info->srcDeregMode == CK_BUFFER_DEREG) {
     deregisterSrcBuffer(info);
   }
 #endif
+
+
+//  if(info->ackMode == CMK_SRC_DEST_ACK || info->ackMode == CMK_DEST_ACK) {
+//    // Send a message to the receiver to invoke CkRdmaEMAckHandler to update the counter
+//    invokeRemoteNcpyAckHandler(info->destPe, info->refPtr, ncpyHandlerIdx::EM_ACK);
+//  }
 
   invokeSourceCallback(info);
 
