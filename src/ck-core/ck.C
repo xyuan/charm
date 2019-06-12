@@ -1424,6 +1424,9 @@ void _skipCldHandler(void *converseMsg)
 // Made non-static to be used by ckmessagelogging
 void _skipCldEnqueue(int pe,envelope *env, int infoFn)
 {
+
+    CkPrintf("[%d][%d][%d] _skipCldEnqueue pe=%d\n", CkMyPe(), CkMyNode(), CkMyRank(), pe);
+
 #if CMK_CHARMDEBUG
   if (!ConverseDeliver(pe)) {
     CmiFree(env);

@@ -378,8 +378,13 @@ public:
     UShort getEpIdx(void) const { return epIdx; }
     void   setEpIdx(const UShort idx) { epIdx = idx; }
     UInt   getSrcPe(void) const { return pe; }
-    void   setSrcPe(const UInt s) { pe = s; }
-    static void setSrcPe(char *env, const UInt s) { ((envelope*)env)->setSrcPe(s); }
+    void   setSrcPe(const UInt s) {
+      CmiPrintf("[%d][%d][%d] ####### setSrcPe 1 setting to %d and env is %p\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), s, core);
+      pe = s;
+    }
+    static void setSrcPe(char *env, const UInt s) {
+      CmiPrintf("[%d][%d][%d] ####### setSrcPe 2 setting to %d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), s);
+      ((envelope*)env)->setSrcPe(s); }
 
 // Readonly-specific fields
     UInt   getCount(void) const { 

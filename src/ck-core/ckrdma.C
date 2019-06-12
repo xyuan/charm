@@ -459,7 +459,7 @@ void CkRdmaEMAckHandler(int destPe, void *ack) {
 #if CMK_REG_REQUIRED
   CmiSpanningTreeInfo *t = NULL;
   if(ncpyEmInfo->mode == ncpyEmApiMode::BCAST_SEND || ncpyEmInfo->mode == ncpyEmApiMode::BCAST_RECV)
-    t = getSpanningTreeInfo(CMI_BROADCAST_ROOT(ncpyEmInfo->msg) -1);
+    t = getSpanningTreeInfo(getRootPe(ncpyEmInfo->msg));
 
   NcpyOperationInfo *ncpyOpInfo = &(emBuffInfo->ncpyOpInfo);
 
@@ -639,9 +639,11 @@ void setNcpyEmInfo(char *ref, envelope *env, int &msgsize, int &numops, void *fo
 void CkPackRdmaPtrs(char *msgBuf){
   PUP::toMem p((void *)msgBuf);
   PUP::fromMem up((void *)msgBuf);
-  int numops;
+  int numops, root_pe;
   up|numops;
+  up|root_pe;
   p|numops;
+  p|root_pe;
 
   // Pack ncpy pointers in CkNcpyBuffer
   for(int i=0; i<numops; i++){
@@ -656,9 +658,11 @@ void CkPackRdmaPtrs(char *msgBuf){
 void CkUnpackRdmaPtrs(char *msgBuf){
   PUP::toMem p((void *)msgBuf);
   PUP::fromMem up((void *)msgBuf);
-  int numops;
+  int numops, root_pe;
   up|numops;
+  up|root_pe;
   p|numops;
+  p|root_pe;
 
   // Unpack ncpy pointers in CkNcpyBuffer
   for(int i=0; i<numops; i++){
@@ -672,17 +676,43 @@ void CkUnpackRdmaPtrs(char *msgBuf){
 
 // Determine the number of ncpy ops and the sum of the ncpy buffer sizes
 // from the metadata message
-void getRdmaNumopsAndBufsize(envelope *env, int &numops, int &bufsize) {
+void getRdmaNumopsAndBufsize(envelope *env, int &numops, int &bufsize, int &root_pe) {
   numops = 0;
   bufsize = 0;
   PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(env))->msgBuf);
   up|numops;
+  up|root_pe;
+  CmiPrintf("[%d][%d][%d] ******** root node is %d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), root_pe);
   for(int i=0; i<numops; i++){
     CkNcpyBuffer w;
     up|w;
     bufsize += CK_ALIGN(w.cnt, 16);
   }
 }
+
+int getSrcPe(envelope *env) {
+  int numops, root_pe;
+  PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(env))->msgBuf);
+  up|numops;
+  up|root_pe;
+  for(int i=0; i<numops; i++){
+    CkNcpyBuffer w;
+    up|w;
+    return w.pe;
+  }
+}
+
+int getRootPe(envelope *env) {
+  int numops;
+  int root_pe;
+  PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(env))->msgBuf);
+  up|numops;
+  up|root_pe;
+  CmiPrintf("[%d][%d][%d] ^^^^^^^^ getRootPe - %d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), root_pe);
+  return root_pe;
+}
+
+
 
 void handleEntryMethodApiCompletion(NcpyOperationInfo *info) {
 
@@ -731,10 +761,10 @@ void handleReverseEntryMethodApiCompletion(NcpyOperationInfo *info) {
  */
 envelope* CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg){
 
-  int numops=0, bufsize=0, msgsize=0;
+  int numops=0, bufsize=0, msgsize=0, root_pe=-1;
 
   CkUnpackMessage(&env); // Unpack message to access msgBuf inside getRdmaNumopsAndBufsize
-  getRdmaNumopsAndBufsize(env, numops, bufsize);
+  getRdmaNumopsAndBufsize(env, numops, bufsize, root_pe);
   CkPackMessage(&env); // Pack message to ensure corret copying into copyenv
 
   msgsize = env->getTotalsize();
@@ -747,7 +777,7 @@ envelope* CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg
   CkNcpyMode ncpyMode = findTransferMode(env->getSrcPe(), CkMyPe());
   if(_topoTree == NULL) CkAbort("CkRdmaIssueRgets:: topo tree has not been calculated \n");
   if(emMode == ncpyEmApiMode::BCAST_SEND || emMode == ncpyEmApiMode::BCAST_RECV)
-    t = getSpanningTreeInfo(CMI_BROADCAST_ROOT(env) -1);
+    t = getSpanningTreeInfo(root_pe);
 
   layerInfoSize = CMK_COMMON_NOCOPY_DIRECT_BYTES + CMK_NOCOPY_DIRECT_BYTES;
 
@@ -781,7 +811,9 @@ envelope* CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg
   PUP::toMem p((void *)(((CkMarshallMsg *)EnvToUsr(copyenv))->msgBuf));
   PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(copyenv))->msgBuf);
   up|numops;
+  up|root_pe;
   p|numops;
+  p|root_pe;
 
   // source buffer
   CkNcpyBuffer source;
@@ -850,10 +882,11 @@ envelope* CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg
  * the destination to perform zerocopy operations as a part of the Zerocopy Entry Method
  * API
  */
-void CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg, int numops, void **arrPtrs, int *arrSizes, CkNcpyBufferPost *postStructs){
+void CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg, int numops, int root_pe, void **arrPtrs, int *arrSizes, CkNcpyBufferPost *postStructs){
 
   if(emMode == ncpyEmApiMode::BCAST_SEND)
     CkAbort("CkRdmaIssueRgets:: topo tree has not been calculated \n");
+
 
   // Iterate over the ncpy buffer and either perform the operations
   int msgsize = env->getTotalsize();
@@ -862,15 +895,17 @@ void CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg, int
   char *ref;
   int layerInfoSize, ncpyObjSize, extraSize;
 
-  CkNcpyMode ncpyMode = findTransferMode(env->getSrcPe(), CkMyPe());
+  CkNcpyMode ncpyMode = findTransferMode(getSrcPe(env), CkMyPe());
+  //CkNcpyMode ncpyMode = findTransferMode(0, CkMyPe());
+  CkPrintf("[%d][%d][%d] ************************************************ CkRdmaIssuegets, root pe:%d, env->getSrcPe()=%d, transferMode=%d and env is %p and new pe is %d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), root_pe, env->getSrcPe(), ncpyMode, env, getSrcPe(env));
 
   CmiSpanningTreeInfo *t = NULL;
 
   if(_topoTree == NULL) CkAbort("CkRdmaIssueRgets:: topo tree has not been calculated \n");
 
   if(emMode == ncpyEmApiMode::BCAST_SEND || emMode == ncpyEmApiMode::BCAST_RECV) {
-    t = getSpanningTreeInfo(CMI_BROADCAST_ROOT(env) -1);
-    CkPrintf("[%d][%d][%d] CkRdmaIssueRgets Root is:%d, my parent is %d, my child count is %d\n", CkMyPe(), CkMyNode(), CkMyRank(), CMI_BROADCAST_ROOT(env) - 1, t->parent, t->child_count);
+    t = getSpanningTreeInfo(root_pe);
+    CkPrintf("[%d][%d][%d] CkRdmaIssueRgets Root is:%d, my parent is %d, my child count is %d\n", CkMyPe(), CkMyNode(), CkMyRank(), root_pe, t->parent, t->child_count);
   }
 
   layerInfoSize = CMK_COMMON_NOCOPY_DIRECT_BYTES + CMK_NOCOPY_DIRECT_BYTES;
@@ -892,7 +927,9 @@ void CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg, int
   PUP::toMem p((void *)(((CkMarshallMsg *)EnvToUsr(env))->msgBuf));
   PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(env))->msgBuf);
   up|numops;
+  up|root_pe;
   p|numops;
+  p|root_pe;
 
   // source buffer
   CkNcpyBuffer source;
@@ -955,20 +992,21 @@ void CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg, int
   }
 }
 
-/***************************** Zerocopy Bcast Entry Method API ****************************/
 
 /********************** Zerocopy Bcast Entry Method API - Utility functions ***************/
 
 // Method called on the bcast source to store some information for ack handling
 void CkRdmaPrepareBcastMsg(envelope *env) {
 
-  int numops;
+  int numops, root_pe;
   CkUnpackMessage(&env);
   PUP::toMem p((void *)(((CkMarshallMsg *)EnvToUsr(env))->msgBuf));
   PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(env))->msgBuf);
 
   up|numops;
+  up|root_pe;
   p|numops;
+  p|root_pe;
 
   NcpyBcastRootAckInfo *bcastAckInfo = (NcpyBcastRootAckInfo *)CmiAlloc(sizeof(NcpyBcastRootAckInfo) + numops * sizeof(CkNcpyBuffer));
 
@@ -995,14 +1033,16 @@ void CkRdmaPrepareBcastMsg(envelope *env) {
 // Method called to extract the parent bcastAckInfo from the received message for ack handling
 // Requires message to be unpacked
 const void *getParentBcastAckInfo(void *msg, int &srcPe) {
-  int numops;
+  int numops, root_pe;
   CkNcpyBuffer source;
   envelope *env = (envelope *)msg;
   PUP::toMem p((void *)(((CkMarshallMsg *)EnvToUsr(env))->msgBuf));
   PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(env))->msgBuf);
 
   up|numops;
+  up|root_pe;
   p|numops;
+  p|root_pe;
 
   CkAssert(numops >= 1);
 
@@ -1016,7 +1056,7 @@ const void *getParentBcastAckInfo(void *msg, int &srcPe) {
 // Called only on intermediate nodes
 // Allocate a NcpyBcastInterimAckInfo and return it
 NcpyBcastInterimAckInfo *allocateInterimNodeAckObj(envelope *myEnv, envelope *myChildEnv, int pe) {
-  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(CMI_BROADCAST_ROOT(myEnv) -1));
+  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(getRootPe(myEnv)));
 
   // Allocate a NcpyBcastInterimAckInfo object
   NcpyBcastInterimAckInfo *bcastAckInfo = (NcpyBcastInterimAckInfo *)CmiAlloc(sizeof(NcpyBcastInterimAckInfo));
@@ -1069,12 +1109,14 @@ void CkRdmaEMBcastAckHandler(void *ack) {
     } else {
 
       NcpyBcastInterimAckInfo *bcastInterimAckInfo = (NcpyBcastInterimAckInfo *)(bcastAckInfo);
-      CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(CMI_BROADCAST_ROOT(bcastInterimAckInfo->msg) -1));
+      // This node should send a message to its parent
+      envelope *myMsg = (envelope *)(bcastInterimAckInfo->msg);
+
+      CkUnpackMessage(&myMsg);
+      CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(getRootPe(myMsg)));
+      CkPackMessage(&myMsg);
 
       if(bcastInterimAckInfo->isRecv)  { // bcast post api
-        // This node should send a message to its parent
-        envelope *myMsg = (envelope *)(bcastInterimAckInfo->msg);
-
         // deregister using the message
 #if CMK_REG_REQUIRED
         deregisterMemFromMsg(myMsg, true);
@@ -1188,9 +1230,11 @@ void deregisterMemFromMsg(envelope *env, bool isRecv) {
   CkUnpackMessage(&env);
   PUP::toMem p((void *)(((CkMarshallMsg *)EnvToUsr(env))->msgBuf));
   PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(env))->msgBuf);
-  int numops;
+  int numops, root_pe;
   up|numops;
+  up|root_pe;
   p|numops;
+  p|root_pe;
 
   CkNcpyBuffer dest;
 
@@ -1211,7 +1255,7 @@ void deregisterMemFromMsg(envelope *env, bool isRecv) {
 /****************************** Zerocopy BCAST EM SEND API Functions ***********************/
 
 void handleMsgUsingCMAPostCompletionForSendBcast(envelope *copyenv, envelope *env, CkNcpyBuffer &source) {
-  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(CMI_BROADCAST_ROOT(env) -1));
+  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(getRootPe(env)));
 
   if(t.child_count == 0) { // child node
 
@@ -1239,7 +1283,7 @@ void handleMsgUsingCMAPostCompletionForSendBcast(envelope *copyenv, envelope *en
 
 void processBcastSendEmApiCompletion(NcpyEmInfo *ncpyEmInfo, int destPe) {
   envelope *myEnv = (envelope *)(ncpyEmInfo->msg);
-  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(CMI_BROADCAST_ROOT(myEnv) -1));
+  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(getRootPe(myEnv)));
 
   if(t.child_count == 0) { // Child Node
 
@@ -1272,7 +1316,7 @@ void processBcastSendEmApiCompletion(NcpyEmInfo *ncpyEmInfo, int destPe) {
 // Method called on intermediate nodes after RGET to switch old source pointers with my pointers
 void CkReplaceSourcePtrsInBcastMsg(envelope *prevEnv, envelope *env, void *bcastAckInfo, int origPe) {
 
-  int numops;
+  int numops, root_pe;
 
   CkUnpackMessage(&prevEnv);
   PUP::toMem p_prev((void *)(((CkMarshallMsg *)EnvToUsr(prevEnv))->msgBuf));
@@ -1286,8 +1330,14 @@ void CkReplaceSourcePtrsInBcastMsg(envelope *prevEnv, envelope *env, void *bcast
   up_prev|numops;
   up|numops;
 
+  up_prev|root_pe;
+  up|root_pe;
+
   p|numops;
   p_prev|numops;
+
+  p|root_pe;
+  p_prev|root_pe;
 
   for(int i=0; i<numops; i++){
     // source buffer
@@ -1341,7 +1391,7 @@ void CkRdmaEMBcastPostAckHandler(void *msg) {
   NcpyEmInfo *ncpyEmInfo = (NcpyEmInfo *)(msg);
   envelope *env = (envelope *)(ncpyEmInfo->msg);
 
-  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(CMI_BROADCAST_ROOT(env) -1));
+  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(getRootPe(env)));
 
   // send a message to your parents if you are a child node
   if(t.child_count == 0) {
@@ -1374,14 +1424,16 @@ void CkRdmaEMBcastPostAckHandler(void *msg) {
 
 void CkReplaceSourcePtrsInBcastMsg(envelope *env, NcpyBcastInterimAckInfo *bcastAckInfo, int origPe) {
 
-  int numops;
+  int numops, root_pe;
   CkUnpackMessage(&env);
   //CkUnpackRdmaPtrs((((CkMarshallMsg *)EnvToUsr(env))->msgBuf));
   PUP::toMem p((void *)(((CkMarshallMsg *)EnvToUsr(env))->msgBuf));
   PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(env))->msgBuf);
 
   up|numops;
+  up|root_pe;
   p|numops;
+  p|root_pe;
 
   // source buffer
   CkNcpyBuffer source;
@@ -1417,7 +1469,10 @@ void updatePeerCounterAndPush(envelope *env) {
   PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(env))->msgBuf);
 
   up|numops;
+  up|root_pe;
   p|numops;
+  p|root_pe;
+
 
   CkNcpyBuffer source;
 
@@ -1432,7 +1487,7 @@ void updatePeerCounterAndPush(envelope *env) {
   p|source;
   CkPackMessage(&env);
   CMI_ZC_MSGTYPE(env) = CMK_ZC_BCAST_RECV_ALL_DONE_MSG;
-  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(CMI_BROADCAST_ROOT(env) -1));
+  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(getRootPe(env)));
 
   peerAckInfo->decNumPeers();
   if(peerAckInfo->getNumPeers() == 0) {
@@ -1442,7 +1497,7 @@ void updatePeerCounterAndPush(envelope *env) {
 
 void sendRecvDoneMsgToPeers(envelope *env, CkArray *mgr) {
 
-  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(CMI_BROADCAST_ROOT(env) -1));
+  CmiSpanningTreeInfo &t = *(getSpanningTreeInfo(getRootPe(env)));
 
   // Allocate a struct for handling peer acks
   NcpyBcastRecvPeerAckInfo *peerAckInfo = new NcpyBcastRecvPeerAckInfo();
@@ -1460,7 +1515,11 @@ void sendRecvDoneMsgToPeers(envelope *env, CkArray *mgr) {
   PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(env))->msgBuf);
 
   up|numops;
+  up|root_pe;
   p|numops;
+  p|root_pe;
+
+
 
   CkNcpyBuffer source;
 

@@ -245,7 +245,7 @@ class CkNcpyBuffer{
   friend void constructDestinationBufferObject(NcpyOperationInfo *info, CkNcpyBuffer &dest);
 
   friend envelope* CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg);
-  friend void CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg, int numops, void **arrPtrs, int *arrSizes, CkNcpyBufferPost *postStructs);
+  friend void CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg, int numops, int root_pe, void **arrPtrs, int *arrSizes, CkNcpyBufferPost *postStructs);
 
   friend void readonlyGet(CkNcpyBuffer &src, CkNcpyBuffer &dest, void *refPtr);
   friend void readonlyCreateOnSource(CkNcpyBuffer &src);
@@ -327,7 +327,7 @@ struct NcpyEmBufferInfo{
  */
 envelope* CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg = NULL);
 
-void CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg, int numops, void **arrPtrs, int *arrSizes, CkNcpyBufferPost *postStructs);
+void CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg, int numops, int root_pe, void **arrPtrs, int *arrSizes, CkNcpyBufferPost *postStructs);
 
 void handleEntryMethodApiCompletion(NcpyOperationInfo *info);
 
@@ -341,7 +341,7 @@ void CkUnpackRdmaPtrs(char *msgBuf);
 
 // Determine the number of ncpy ops and the sum of the ncpy buffer sizes
 // from the metadata message
-void getRdmaNumopsAndBufsize(envelope *env, int &numops, int &bufsize);
+void getRdmaNumopsAndBufsize(envelope *env, int &numops, int &bufsize, int &root_pe);
 
 // Ack handler function for the nocopy EM API
 void CkRdmaEMAckHandler(int destPe, void *ack);
@@ -521,6 +521,8 @@ CkArray* getArrayMgrFromMsg(envelope *env);
 void sendAckMsgToParent(envelope *env);
 
 void sendRecvDoneMsgToPeers(envelope *env, CkArray *mgr);
+
+int getRootPe(envelope *env);
 
 #endif /* End of CMK_ONESIDED_IMPL */
 
