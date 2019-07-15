@@ -329,6 +329,9 @@ public:
   WinStruct() noexcept : comm(MPI_COMM_NULL), index(-1), areRecvsPosted(false), inEpoch(false) {
     exposureRankList.clear(); accessRankList.clear(); requestList.clear();
   }
+  // WinStruct(MPI_Comm comm_) noexcept : comm(comm_), index(-1), areRecvsPosted(false), inEpoch(false) {
+  //   exposureRankList.clear(); accessRankList.clear(); requestList.clear();
+  // }
   WinStruct(MPI_Comm comm_, int index_) noexcept : comm(comm_), index(index_), areRecvsPosted(false), inEpoch(false) {
     exposureRankList.clear(); accessRankList.clear(); requestList.clear();
   }
@@ -2406,6 +2409,7 @@ class ampiParent final : public CBase_ampiParent {
   int deleteAttr(MPI_Comm comm, vector<int>& keyvals, int keyval) noexcept;
 
   int addWinStruct(WinStruct *win) noexcept;
+  int addEmptyWinStruct() noexcept;
   WinStruct *getWinStruct(MPI_Win win) const noexcept;
   void removeWinStruct(WinStruct *win) noexcept;
 
@@ -2571,13 +2575,13 @@ class ampi final : public CBase_ampi {
   Amm<AmpiMsg *, AMPI_AMM_COLL_POOL_SIZE> unexpectedBcastMsgs;
 
   // Store generalized request classes created by MPIX_Grequest_class_create
-  vector<greq_class_desc> greq_classes;
+  std::vector<greq_class_desc> greq_classes;
+  CkPupPtrVec<win_obj> winObjects;
 
  private:
   ampiCommStruct myComm;
   vector<int> tmpVec; // stores temp group info
   CProxy_ampi remoteProxy; // valid only for intercommunicator
-  CkPupPtrVec<win_obj> winObjects;
 
  private:
   inline bool isInOrder(int seqIdx, int seq) noexcept { return oorder.isInOrder(seqIdx, seq); }
@@ -2789,6 +2793,7 @@ class ampi final : public CBase_ampi {
 
  public:
   MPI_Win createWinInstance(void *base, MPI_Aint size, int disp_unit, MPI_Info info) noexcept;
+  MPI_Win createDynamicWinInstance(MPI_Info info /*ignored*/) noexcept;
   int deleteWinInstance(MPI_Win win) noexcept;
   int winGetGroup(WinStruct *win, MPI_Group *group) const noexcept;
   int winPut(const void *orgaddr, int orgcnt, MPI_Datatype orgtype, int rank,

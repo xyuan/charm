@@ -466,6 +466,9 @@ AMPI_CUSTOM_FUNC(int, MPI_WIN_NULL_DELETE_FN , MPI_Win, int, void *, void * )
 AMPI_CUSTOM_FUNC(int, MPI_WIN_DUP_FN         , MPI_Win, int, void *, void *, void *, int * )
 
 /***windows/rma***/
+AMPI_FUNC(int, MPI_Win_attach, MPI_Win win, void *base, MPI_Aint size)
+AMPI_FUNC(int, MPI_Win_create_dynamic, MPI_Info info, MPI_Comm comm, MPI_Win *win)
+AMPI_FUNC(int, MPI_Win_detach, MPI_Win win, const void *base)
 AMPI_FUNC(int, MPI_Win_create, void *base, MPI_Aint size, int disp_unit,
                     MPI_Info info, MPI_Comm comm, MPI_Win *newwin)
 AMPI_FUNC(int, MPI_Win_free, MPI_Win *win)
@@ -684,9 +687,6 @@ AMPI_FUNC_NOIMPL(int, MPI_Unpublish_name, const char *service_name, MPI_Info inf
 
 AMPI_FUNC_NOIMPL(int, MPI_Win_allocate, MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm, void *baseptr, MPI_Win *win)
 AMPI_FUNC_NOIMPL(int, MPI_Win_allocate_shared, MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm, void *baseptr, MPI_Win *win)
-AMPI_FUNC_NOIMPL(int, MPI_Win_attach, MPI_Win win, void *base, MPI_Aint size)
-AMPI_FUNC_NOIMPL(int, MPI_Win_create_dynamic, MPI_Info info, MPI_Comm comm, MPI_Win *win)
-AMPI_FUNC_NOIMPL(int, MPI_Win_detach, MPI_Win win, const void *base)
 AMPI_FUNC_NOIMPL(int, MPI_Win_flush, int rank, MPI_Win win)
 AMPI_FUNC_NOIMPL(int, MPI_Win_flush_all, MPI_Win win)
 AMPI_FUNC_NOIMPL(int, MPI_Win_flush_local, int rank, MPI_Win win)

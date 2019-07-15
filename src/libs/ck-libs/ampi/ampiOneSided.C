@@ -671,6 +671,16 @@ MPI_Win ampi::createWinInstance(void *base, MPI_Aint size, int disp_unit, MPI_In
   return (parent->addWinStruct(newwin));
 }
 
+MPI_Win ampi::createDynamicWinInstance(MPI_Info info /*ignored*/) noexcept {
+  // AMPI_DEBUG("     Creating win obj {%d, %p}\n ", myComm.getComm());
+  // win_obj *newobj = new win_obj((char*)(NULL), base, size, disp_unit, myComm.getComm());
+  // winObjects.push_back(newobj);
+  WinStruct *newwin = new WinStruct(myComm.getComm(), -42);
+  AMPI_DEBUG(" [%d] Creating dynamic MPI_Win at (%p) with comm=%d\n", thisIndex, &newwin, myComm.getComm());
+  return (parent->addWinStruct(newwin));
+}
+
+
 int ampi::deleteWinInstance(MPI_Win win) noexcept {
   WinStruct *winStruct = parent->getWinStruct(win);
   win_obj *winobj = winObjects[winStruct->index];
@@ -732,6 +742,38 @@ AMPI_API_IMPL(int, MPI_Win_create, void *base, MPI_Aint size, int disp_unit,
   parent->setAttr(*newwin, keyvals, MPI_WIN_SIZE, &size);
   parent->setAttr(*newwin, keyvals, MPI_WIN_DISP_UNIT, &disp_unit);
   ptr = ptr->barrier(); // synchronize all participating virtual processes
+  return MPI_SUCCESS;
+}
+
+AMPI_API_IMPL(int, MPI_Win_create_dynamic, MPI_Info info, MPI_Comm comm, MPI_Win *win)
+{
+  AMPI_API("AMPI_Win_create_dynamic");
+  ampiParent *parent = getAmpiParent();
+  ampi *ptr = getAmpiInstance(comm);
+  *win = ptr->createDynamicWinInstance(info);
+  ptr = ptr->barrier(); // synchronize all participating virtual processes
+  return MPI_SUCCESS;
+}
+
+AMPI_API_IMPL(int, MPI_Win_attach, MPI_Win win, void *base, MPI_Aint size)
+{
+  AMPI_API("AMPI_Win_attach");
+  AMPI_DEBUG("AMPI_Win_attach win=%d\n", win);
+  ampiParent *parent = getAmpiParent();
+  WinStruct *winStruct = parent->getWinStruct(win);
+  // CkAssert(winStruct==0);
+  MPI_Comm comm = winStruct->comm;
+  ampi *ptr = getAmpiInstance(comm);
+
+  win_obj *newobj = new win_obj((char*)(NULL), base, size, 1, comm);
+  ptr->winObjects.push_back(newobj);
+
+  return MPI_SUCCESS;
+}
+
+AMPI_API_IMPL(int, MPI_Win_detach, MPI_Win win, const void *base)
+{
+  AMPI_API("AMPI_Win_detach");
   return MPI_SUCCESS;
 }
 
