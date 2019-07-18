@@ -18,6 +18,7 @@ void CmiSetRdmaCommonInfo(void *info, const void *ptr, int size) {
 #if CMK_USE_CMA
   CmiCommonRdmaInfo_t *cmmInfo = (CmiCommonRdmaInfo_t *)info;
   cmmInfo->pid = getpid();
+  CmiPrintf("[%d][%d][%d] Inside CmiSetRdmaCommonInfo, setting pid to %d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), cmmInfo->pid);
 #endif
 }
 
@@ -54,6 +55,8 @@ void CmiIssueRgetUsingCMA(
   // get remote process id
   CmiCommonRdmaInfo_t *remoteCommInfo = (CmiCommonRdmaInfo_t *)srcInfo;
   pid_t pid = remoteCommInfo->pid;
+
+  CmiPrintf("[%d][%d][%d] Inside CmiIssueRgetUsingCMA, remote pid is %d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), pid);
   readShmCma(pid, &local, &remote, 1, size);
 }
 

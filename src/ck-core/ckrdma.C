@@ -870,7 +870,7 @@ void handleEntryMethodApiCompletion(NcpyOperationInfo *info) {
 
 #if CMK_REG_REQUIRED
   // send a message to the source to de-register and invoke callback
-  if(info->srcDeregMode == CK_BUFFER_DEREG) {
+  if(info->isSrcRegistered == 1 && info->srcDeregMode == CK_BUFFER_DEREG) {
     QdCreate(1); // Matching QdProcess in CkRdmaDirectAckHandler
     CmiInvokeRemoteDeregAckHandler(info->srcPe, info);
   } else // Do not de-register source when srcDeregMode != CK_BUFFER_DEREG
@@ -962,11 +962,14 @@ envelope* CkRdmaIssueRgets(envelope *env, ncpyEmApiMode emMode, void *forwardMsg
   CkUnpackMessage(&copyenv);
   PUP::toMem p((void *)(((CkMarshallMsg *)EnvToUsr(copyenv))->msgBuf));
   PUP::fromMem up((void *)((CkMarshallMsg *)EnvToUsr(copyenv))->msgBuf);
+
   up|numops;
   up|rootNode;
   p|numops;
   p|rootNode;
 
+
+  CmiPrintf("[%d][%d][%d] Inside CkRdmaIssueRgets numops=%d, rootNode=%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), numops, rootNode);
   // source buffer
   CkNcpyBuffer source;
 

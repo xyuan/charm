@@ -181,6 +181,7 @@ class CkNcpyBuffer{
     // Set machine layer information when regMode is not CK_BUFFER_NOREG
     if(regMode != CK_BUFFER_NOREG) {
 
+      CmiPrintf("[%d][%d][%d] ck-calling CmiSetRdmaCommonInfo\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
       CmiSetRdmaCommonInfo(&layerInfo[0], ptr, cnt);
 
       /* Set the pointer layerInfo unconditionally for layers that don't require pinning (MPI, PAMI)
