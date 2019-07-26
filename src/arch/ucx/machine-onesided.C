@@ -100,6 +100,23 @@ void UcxRmaOp(NcpyOperationInfo *ncpyOpInfo, int op)
             op, ncpyOpInfo->srcPe, ncpyOpInfo->destPe, ncpyOpInfo->srcSize,
             ncpyOpInfo->destSize, dstInfo->packedRkey, srcInfo->memh, dstInfo->memh);
 
+#if CMK_SMP
+    if(CmiMyRank() != CmiMyNodeSize()) { // worker thread
+
+      // Push a UcxPendingRequest to post the GET or PUT operation from the comm thread
+      UcxPendingRequest *req = (UcxPendingRequest*)CmiAlloc(sizeof(UcxPendingRequest));
+      req->msgBuf = ncpyOpInfo;
+      req->dNode  = (op == UCX_RMA_OP_GET) ? CmiNodeOf(ncpyOpInfo->srcPe) : CmiNodeOf(ncpyOpInfo->destPe);
+      req->size   = std::min(ncpyOpInfo->srcSize, ncpyOpInfo->destSize);
+      req->op     = op;
+
+      UCX_LOG(3, " --> (PE=%i) enq msg (queue depth=%i), dNode %i, size %i",
+              CmiMyPe(), PCQueueLength(ucxCtx.txQueue), req->dNode, req->size);
+      PCQueuePush(ucxCtx.txQueue, (char *)req);
+      return;
+    }
+#endif
+
     if (op == UCX_RMA_OP_PUT) {
         ep     = ucxCtx.eps[CmiNodeOf(ncpyOpInfo->destPe)];
         status = ucp_ep_rkey_unpack(ep, dstInfo->packedRkey, &rkey);

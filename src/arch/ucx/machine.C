@@ -47,9 +47,9 @@
 #define UCX_LOG_PRIO 50 // Disabled by default
 
 enum {
-    UCX_SEND_OP,
-    UCX_RMA_OP_PUT,
-    UCX_RMA_OP_GET
+    UCX_SEND_OP,    // Regular Send using UcxSendMsg
+    UCX_RMA_OP_PUT, // RMA Put operation using UcxRmaOp
+    UCX_RMA_OP_GET  // RMA Get operation using UcxRmaOp
 };
 
 #define UCX_LOG(prio, fmt, ...) \
@@ -100,6 +100,7 @@ typedef struct UcxPendingRequest
     int                 size;
     ucp_tag_t           tag;
     int                 dNode;
+    int                 op;
     ucp_send_callback_t cb;
 } UcxPendingRequest;
 #endif
@@ -500,6 +501,7 @@ inline void* UcxSendMsg(int destNode, int destPE, int size,
     req->tag    = sTag;
     req->dNode  = destNode;
     req->cb     = cb;
+    req->op     = UCX_SEND_OP;   // Mark this request as a regular message (UCX_SEND_OP)
 
     UCX_LOG(3, " --> (PE=%i) enq msg (queue depth=%i), dNode %i, size %i",
             CmiMyPe(), PCQueueLength(ucxCtx.txQueue), destNode, size);
@@ -560,19 +562,29 @@ static inline int ProcessTxQueue()
     req = (UcxPendingRequest*)PCQueuePop(ucxCtx.txQueue);
     if (req)
     {
-        UCX_LOG(3, " --> (PE=%i) deq msg (queue depth: %i), dNode %i, size %i",
-                CmiMyPe(), PCQueueLength(ucxCtx.txQueue), req->dNode, req->size);
+        if(req->op == UCX_SEND_OP) { // Regular Message
+            ucs_status_ptr_t status_ptr;
+            status_ptr = ucp_tag_send_nb(ucxCtx.eps[req->dNode], req->msgBuf,
+                                         req->size, ucp_dt_make_contig(1),
+                                         req->tag, req->cb);
 
-        ucs_status_ptr_t status_ptr;
+            if (!UCS_PTR_IS_PTR(status_ptr)) {
+                CmiEnforce(!UCS_PTR_IS_ERR(status_ptr));
 
-        status_ptr = ucp_tag_send_nb(ucxCtx.eps[req->dNode], req->msgBuf,
-                                     req->size, ucp_dt_make_contig(1),
-                                     req->tag, req->cb);
-        if (!UCS_PTR_IS_PTR(status_ptr)) {
-            CmiEnforce(!UCS_PTR_IS_ERR(status_ptr));
-            CmiFree(req->msgBuf);
-        } else {
-            ((UcxRequest*)status_ptr)->msgBuf = req->msgBuf;
+                if(req->tag & UCX_RMA_TAG_MASK) {
+                    NcpyOperationInfo *ncpyOpInfo = (NcpyOperationInfo *)(req->msgBuf);
+                    if(ncpyOpInfo->freeMe == CMK_FREE_NCPYOPINFO)
+                        CmiFree(ncpyOpInfo);
+                } else {
+                    CmiFree(req->msgBuf);
+                }
+            } else {
+                ((UcxRequest*)status_ptr)->msgBuf = req->msgBuf;
+            }
+        } else if(req->op == UCX_RMA_OP_GET || req->op == UCX_RMA_OP_PUT) { // RMA Get or Put
+
+            // Post the GET or PUT operation from the comm thread
+            UcxRmaOp((NcpyOperationInfo *)(req->msgBuf), req->op);
         }
         CmiFree(req);
         return 1;
