@@ -102,6 +102,9 @@ option(BUILD_SHARED        "Build Charm++ dynamic libraries" OFF)
 option(EVERYLB             "Compile EveryLB suite of load balancing strategies" OFF)
 option(F90CHARM            "Build f90charm" OFF)
 
+set(EXTRA_OPTS "" CACHE STRING "Extra flags to pass to compilers.")
+add_compile_options(${EXTRA_OPTS})
+
 if(${DRONE_MODE})
   set(CMK_DRONE_MODE 1)
 else()
@@ -689,7 +692,7 @@ message("==============================" )
 add_custom_target(create_symlinks ALL
                   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/bin ${CMAKE_SOURCE_DIR}/bin
                   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/lib ${CMAKE_SOURCE_DIR}/lib
-                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/lib_so ${CMAKE_SOURCE_DIR}/lib_so
+                  COMMAND test ${BUILD_SHARED} -eq 1 && ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/lib_so ${CMAKE_SOURCE_DIR}/lib_so || true
                   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/include ${CMAKE_SOURCE_DIR}/include
                   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/include ${CMAKE_SOURCE_DIR}/tmp
 
