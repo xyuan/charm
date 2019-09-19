@@ -1537,7 +1537,7 @@ CkMigratable::~CkMigratable() {
 	if (barrierRegistered) {
 	  DEBL((AA "Removing barrier for element %s\n" AB,idx2str(thisIndexMax)));
 	  if (usesAtSync) {
-      myRec->getLBMgr()->RemoveClients(this);
+		myRec->getLBMgr()->RemoveClients(this);
 	  } else
 		myRec->getLBMgr()->RemoveLocalBarrierReceiver(ldBarrierRecvHandle);
 	}
@@ -3325,10 +3325,8 @@ void CkLocMgr::dummyAtSync(void)
 	lbmgr->AtLocalBarrier(this);
 }
 
-#if 1
 void CkLocMgr::staticDummyResumeFromSync(void* data)
 {      ((CkLocMgr*)data)->dummyResumeFromSync(); }
-#endif
 
 void CkLocMgr::dummyResumeFromSync()
 {
