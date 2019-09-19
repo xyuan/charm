@@ -2095,19 +2095,24 @@ void CmiIsomallocContext::pup(PUP::er & p)
 
   const size_t totalsize = allocated_extent - start;
 
-  if (p.isUnpacking())
-  {
-    void * const mapped = map_global_memory(start, totalsize);
-    if (mapped == nullptr)
-      CmiAbort("Failed to unpack CmiIsomallocContext!");
-  }
+  uint8_t * localstart = start;
 
-  p(start, totalsize);
+  p.pup_buffer(localstart, totalsize,
+               [localstart, totalsize](size_t) -> void *
+               {
+                 void * const mapped = map_global_memory(localstart, totalsize);
+                 if (mapped == nullptr)
+                   CmiAbort("Failed to unpack CmiIsomallocContext!");
+                 return mapped;
+               },
+               [localstart, totalsize](void *)
+               {
+                 unmap_global_memory(localstart, totalsize);
+               }
+               );
 
   if (p.isDeleting())
-  {
-    clear();
-  }
+    allocated_extent = start; // the context no longer owns the mmapped region
 }
 
 /************** External interface ***************/
