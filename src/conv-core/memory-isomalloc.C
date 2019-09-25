@@ -52,8 +52,6 @@ static CMK_THREADLOCAL int isomalloc_thread = 0;
 #endif
 
 static int meta_inited = 0;
-extern int _sync_iso;
-extern int _sync_iso_warned;
 
 static void meta_init(char **argv)
 {
@@ -65,12 +63,6 @@ static void meta_init(char **argv)
    isomalloc_thread = 1;         /* isomalloc is allowed in this pthread */
 #endif
    if (CmiMyRank()==0) meta_inited = 1;
-#if CMK_SMP
-    if (CmiMyPe()==0 && _sync_iso == 0 && _sync_iso_warned == 0) {
-        _sync_iso_warned = 1;
-        printf("Warning> Using Isomalloc in SMP mode, you may need to run with '+isomalloc_sync'.\n");
-    }
-#endif
 }
 
 static bool meta_active()
