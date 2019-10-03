@@ -12,6 +12,7 @@ void groupsectiontest_init(void)
   } else
 	{
 
+    CmiPrintf("[%d][%d][%d] Creating group proxy\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
 	  gSectGproxy=CProxy_groupsectiontest::ckNew();
 	  //	      CkPrintf("[%d]made group %d\n",gSectGproxy.ckGetGroupID());
 
@@ -52,6 +53,8 @@ groupsectiontest::groupsectiontest(void)
   sectionSize=ceiling-floor+1;
   iteration=0;
   msgCount=0;
+
+  CmiPrintf("[%d][%d][%d] groupsectiontest::groupsectiontest constructor\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
   //trigger post constructor initialization
   CProxy_groupsectiontest grp(thisgroup);
   
@@ -61,6 +64,7 @@ groupsectiontest::groupsectiontest(void)
 void groupsectiontest::init()
 {
    
+  CmiPrintf("[%d][%d][%d] groupsectiontest::init\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
   // make all section
   int *elemsA= new int[CkNumPes()];
   for(int i=0;i<CkNumPes();i++)
@@ -103,6 +107,9 @@ groupsectiontest::recv(groupsectiontest_msg *msg)
   CkAssert(iteration==msg->iterationCount);
 
   msgCount++;
+
+  CmiPrintf("[%d][%d][%d] groupsectiontest::recv iteration=%d, msgCount=%d, sectionSize=%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), iteration, msgCount, sectionSize);
+
   //  CkPrintf("[%d] iteration %d received msg %d of %d\n",CkMyPe(), iteration,msgCount, sectionSize);
   if(msgCount==sectionSize)
     {
@@ -130,10 +137,14 @@ void groupsectiontest::doneIteration(CkReductionMsg *rmsg)
 	 Instead we use a section containing all members to make sure
 	 it works.
       */
+      CmiPrintf("[%d][%d][%d] groupsectiontest::doneIteration calling nextIteration\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
       groupAllProxy.nextIteration(msg);
     }
   else
     {
+
+        CmiPrintf("[%d][%d][%d] groupsectiontest::doneIteration calling megatest_finish\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
+
       //      CkPrintf("[%d] completed iteration %d with %d contributions\n",CkMyPe(), iteration, ((int *)( rmsg->getData()))[0]);
       megatest_finish();
     }

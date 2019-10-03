@@ -146,8 +146,10 @@ nextidx:
     CmiPrintf("test %d: initiated [all-at-once]\n", num);
     for (i=0; i<bank; i++) {
       if (!megatest_skip(tests[i].name)) {
-	acks_expected++;
-	(tests[i].initiator)();
+       if(i==7||i==15) {
+          acks_expected++;
+          (tests[i].initiator)();
+        }
       }
     }
     megatest_finish();
@@ -187,10 +189,11 @@ main::main(CkArgMsg *msg)
   mainhandle = thishandle;
   if (nTests<=0)
     CkAbort("Megatest: No tests registered-- is MEGATEST_REGISTER_TEST malfunctioning?");
-  for (i=0; i<nTests; i++)
-    (tests[i].initializer)();
+  // No need to initialize since there is no initialization code for test 7, 15
+  //for (i=0; i<nTests; i++)
+  //  (tests[i].initializer)();
   test_bank_size = nTests;
-  next_test_index = 0;
+  next_test_index = 60;
   next_test_number = 0;
   test_negate_skip=0;
   test_repeat = 0;

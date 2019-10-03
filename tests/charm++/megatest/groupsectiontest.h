@@ -4,7 +4,8 @@
 #include "groupsectiontest.decl.h"
 #include "megatest.h"
 
-#define NITER 4
+//#define NITER 4
+#define NITER 1
 
 /* this tests that section multicast works for groups */
 
