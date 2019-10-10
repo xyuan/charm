@@ -82,7 +82,6 @@ protected:
   virtual void CkAbort(const char *str) const;
 
 public:
-//  virtual void ResumeFromSync(void);
   virtual void UserSetLBLoad(void);  /// user define this when setLBLoad is true
   void setObjTime(double cputime);
   double getObjTime();
