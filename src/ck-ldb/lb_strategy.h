@@ -16,31 +16,31 @@ namespace lb_strategy
   template <typename T, bool is_ptr = std::is_pointer<T>::value> struct CmpLoadGreater {};
 
   template <typename T> struct CmpLoadGreater<T,true> {
-    inline bool operator()(const T a, const T b) const { return (a->getLoad() > b->getLoad()); }
+    bool operator()(const T a, const T b) const { return (a->getLoad() > b->getLoad()); }
   };
 
   template <typename T> struct CmpLoadGreater<T,false> {
-    inline bool operator()(const T &a, const T &b) const { return (a.getLoad() > b.getLoad()); }
+    bool operator()(const T &a, const T &b) const { return (a.getLoad() > b.getLoad()); }
   };
 
   template <typename T, bool is_ptr = std::is_pointer<T>::value> struct CmpLoadLess {};
 
   template <typename T> struct CmpLoadLess<T,true> {
-    inline bool operator()(const T a, const T b) const { return (a->getLoad() < b->getLoad()); }
+    bool operator()(const T a, const T b) const { return (a->getLoad() < b->getLoad()); }
   };
 
   template <typename T> struct CmpLoadLess<T,false> {
-    inline bool operator()(const T &a, const T &b) const { return (a.getLoad() < b.getLoad()); }
+    bool operator()(const T &a, const T &b) const { return (a.getLoad() < b.getLoad()); }
   };
 
   template <typename T, bool is_ptr = std::is_pointer<T>::value> struct CmpId {};
 
   template <typename T> struct CmpId<T,true> {
-    inline bool operator()(const T a, const T b) const { return (a->id < b->id); }
+    bool operator()(const T a, const T b) const { return (a->id < b->id); }
   };
 
   template <typename T> struct CmpId<T,false> {
-    inline bool operator()(const T &a, const T &b) const { return (a.id < b.id); }
+    bool operator()(const T &a, const T &b) const { return (a.id < b.id); }
   };
 
   template <typename T>
@@ -66,7 +66,7 @@ namespace lb_strategy
     unsigned int id;
     int oldPe; // PE on which this object lives when load balancing was called
 
-    inline void populate(unsigned int _id, float *_load, int _oldPe) {
+    void populate(unsigned int _id, float *_load, int _oldPe) {
       id = _id;
       oldPe = _oldPe;
       this->maxload = 0;
@@ -76,7 +76,7 @@ namespace lb_strategy
       }
     }
 
-    inline float getLoad() const { return this->maxload; }
+    float getLoad() const { return this->maxload; }
   };
 
   template<> inline void Obj<1>::populate(unsigned int _id, float *_load, int _oldPe) {
@@ -115,22 +115,22 @@ namespace lb_strategy
   public:
     int id = -1;
 
-    inline void populate(int _id, float *_bgload, float *_speed) {
+    void populate(int _id, float *_bgload, float *_speed) {
       id = _id;
       std::copy_n(_bgload, N, this->bgload);
     }
 
-    inline float getLoad() const { return this->maxload; }
+    float getLoad() const { return this->maxload; }
 
-    inline void assign(const Obj<N> *o) {
+    void assign(const Obj<N> *o) {
       for (int i=0; i < N; i++) {
         this->load[i] += o->load[i];
         if (this->load[i] > this->maxload) this->maxload = this->load[i];
       }
     }
-    inline void assign(const Obj<N> &o) { assign(&o); }
+    void assign(const Obj<N> &o) { assign(&o); }
 
-    inline void resetLoad() {
+    void resetLoad() {
       this->maxload = 0;
       for (int i=0; i < N; i++) {
         this->load[i] = this->bgload[i];
@@ -139,12 +139,12 @@ namespace lb_strategy
     }
   };
 
-  template <> void Proc<1,false>::populate(int _id, float *_bgload, float *_speed) {
+  template <> inline void Proc<1,false>::populate(int _id, float *_bgload, float *_speed) {
     id = _id; this->bgload = *_bgload;
   }
-  template <> float Proc<1,false>::getLoad() const { return this->load; }
-  template <> void Proc<1,false>::assign(const Obj<1> *o) { this->load += o->load; }
-  template <> void Proc<1,false>::resetLoad() { this->load = this->bgload; }
+  template <> inline float Proc<1,false>::getLoad() const { return this->load; }
+  template <> inline void Proc<1,false>::assign(const Obj<1> *o) { this->load += o->load; }
+  template <> inline void Proc<1,false>::resetLoad() { this->load = this->bgload; }
 
   // --------- Proc rateAware=true specializations ---------
 
@@ -157,23 +157,23 @@ namespace lb_strategy
     int id = -1;
     float speed[N] = {1.0};
 
-    inline void populate(int _id, float *_bgload, float *_speed) {
+    void populate(int _id, float *_bgload, float *_speed) {
       id = _id;
       std::copy_n(_bgload, N, this->bgload);
       std::copy_n(_speed, N, this->speed);
     }
 
-    inline float getLoad() const { return this->maxload; }
+    float getLoad() const { return this->maxload; }
 
-    inline void assign(const Obj<N> *o) {
+    void assign(const Obj<N> *o) {
       for (int i=0; i < N; i++) {
         this->load[i] += (o->load[i] / speed[i]);
         if (this->load[i] > this->maxload) this->maxload = this->load[i];
       }
     }
-    inline void assign(const Obj<N> &o) { assign(&o); }
+    void assign(const Obj<N> &o) { assign(&o); }
 
-    inline void resetLoad() {
+    void resetLoad() {
       this->maxload = 0;
       for (int i=0; i < N; i++) {
         this->load[i] = this->bgload[i];
@@ -182,12 +182,12 @@ namespace lb_strategy
     }
   };
 
-  template <> void Proc<1,true>::populate(int _id, float *_bgload, float *_speed) {
+  template <> inline void Proc<1,true>::populate(int _id, float *_bgload, float *_speed) {
     id = _id; this->bgload = *_bgload; speed[0] = _speed[0];
   }
-  template <> float Proc<1,true>::getLoad() const { return this->load; }
-  template <> void Proc<1,true>::assign(const Obj<1> *o) { this->load += (o->load / speed[0]); }
-  template <> void Proc<1,true>::resetLoad() { this->load = this->bgload; }
+  template <> inline float Proc<1,true>::getLoad() const { return this->load; }
+  template <> inline void Proc<1,true>::assign(const Obj<1> *o) { this->load += (o->load / speed[0]); }
+  template <> inline void Proc<1,true>::resetLoad() { this->load = this->bgload; }
 
   // ---------------- Strategy --------------------
 
