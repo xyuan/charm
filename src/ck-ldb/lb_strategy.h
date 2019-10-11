@@ -7,6 +7,12 @@
 namespace lb_strategy
 {
 
+  // The reason for having pointer and non-pointer versions of these is so that
+  // load balancing strategies can accept both vectors of objects and vectors
+  // of pointers to objects. My tests always showed that strategies run faster
+  // passing a vector of objects instead of pointers, but it doesn't hurt to
+  // keep this around for flexibility
+
   template <typename T, bool is_ptr = std::is_pointer<T>::value> struct CmpLoadGreater {};
 
   template <typename T> struct CmpLoadGreater<T,true> {
@@ -45,7 +51,11 @@ namespace lb_strategy
 
   // ---------------- Obj --------------------
 
-  struct obj_1_data { float load; };
+  // Obj represents a migratable chare with a load (1D) or vector of loads (nD).
+  // Load balancing strategies typically receive a list of Obj and decide
+  // where to migrate them
+
+  struct obj_1_data { float load; };  // data for objects with non-vector load
   template <int N> struct obj_N_data { float load[N]; float maxload; };
 
   template <int N, bool multi = (N > 1)>
@@ -54,7 +64,7 @@ namespace lb_strategy
   public:
 
     unsigned int id;
-    int oldPe;
+    int oldPe; // PE on which this object lives when load balancing was called
 
     inline void populate(unsigned int _id, float *_load, int _oldPe) {
       id = _id;
@@ -79,7 +89,7 @@ namespace lb_strategy
 
   /**
     * class Proc<int N, bool rateAware>
-    * This just shows the interface. only the specializations (below) are defined
+    * This just shows the interface. only the specializations (below) are defined.
     * N: number of dimensions of vector load
     * rateAware: true if speed aware, false otherwise
     */
@@ -185,7 +195,14 @@ namespace lb_strategy
   class Strategy
   {
     public:
-      virtual void solve(std::vector<O> &objs, std::vector<P> &procs, S &solution, bool objsSorted=false) = 0;
+      /**
+        * A strategy receives a vector of objects, processors and a solution
+        * object to store the solution. Solution has a method `assign(O,P)` to
+        * assign an object to a processor. It is meant to be opaque to the
+        * strategy. For example, it could directly store the results in a message.
+        */
+      virtual void solve(std::vector<O> &objs, std::vector<P> &procs, S &solution,
+                         bool objsSorted=false) = 0;
       virtual ~Strategy() {}
   };
 
@@ -214,17 +231,23 @@ namespace lb_strategy
   template <typename O, typename P, typename S>
   class Rotate : public Strategy<O,P,S> {
     public:
+      // TODO we should print a warning message if Rotate is used (it is only
+      // useful for diagnostic purposes). However, it probably shouldn't be
+      // printed by Rotate because, depending on the tree configuration used with TreeLB,
+      // multiple Rotate strategies can be instantiated across PEs or even in the
+      // same PE. And it is also possible that Rotates are instantiated but not on PE 0.
       void solve(std::vector<O> &objs, std::vector<P> &procs, S &solution, bool objsSorted) {
         std::sort(procs.begin(), procs.end(), CmpId<P>());
         // could use unordered_map but vector is faster and doesn't require much memory, even
         // for a few million PEs
+        // It is important to note that a strategy might not receive all objects
+        // and processors, depending on the TreeLB hierarchy used
         std::vector<int> procMap(CkNumPes(), -1);  // real pe -> idx in procs
         for (int i=0; i < procs.size(); i++) procMap[procs[i].id] = i;
         for (const auto &o : objs) {
           if (procMap[o.oldPe] == -1) CkAbort("Rotate does not support foreign objects\n");
           P &p = procs[(procMap[o.oldPe] + 1) % procs.size()];
           solution.assign(o, p);
-          //fprintf(stderr, "Moving object %d from PE %d to %d\n", o.id, o.oldPe, p.id);
         }
       }
   };
