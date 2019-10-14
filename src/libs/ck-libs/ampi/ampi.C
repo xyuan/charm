@@ -1585,7 +1585,13 @@ void ampiParent::setUserJustMigratedFn(MPI_MigrateFn f) noexcept {
 
 void ampiParent::ckAboutToMigrate() noexcept {
   if (userAboutToMigrateFn) {
+    CtvAccess(_curTCharm) = thread;
+    CtvAccess(ampiPtr) = this;
+    CthInterceptionsImmediateActivate(thread->getThread());
     (*userAboutToMigrateFn)();
+    CthInterceptionsImmediateDeactivate(thread->getThread());
+    CtvAccess(_curTCharm) = nullptr;
+    CtvAccess(ampiPtr) = nullptr;
   }
 }
 
@@ -1593,7 +1599,13 @@ void ampiParent::ckJustMigrated() noexcept {
   ArrayElement1D::ckJustMigrated();
   prepareCtv();
   if (userJustMigratedFn) {
+    CtvAccess(_curTCharm) = thread;
+    CtvAccess(ampiPtr) = this;
+    CthInterceptionsImmediateActivate(thread->getThread());
     (*userJustMigratedFn)();
+    CthInterceptionsImmediateDeactivate(thread->getThread());
+    CtvAccess(_curTCharm) = nullptr;
+    CtvAccess(ampiPtr) = nullptr;
   }
 }
 
