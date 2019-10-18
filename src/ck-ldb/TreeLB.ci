@@ -1,6 +1,6 @@
 module TreeLB {
 
-  include "idm.h";
+  include "TreeLB_msg.h";
 
   extern module BaseLB;
 

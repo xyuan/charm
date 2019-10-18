@@ -2,6 +2,8 @@
 #include <unordered_map>
 #include <pup_stl.h>
 
+// Inter-domain message, where domains means different subtrees rooted at the same
+// level. Used to indicate that objects need to migrate from one subtree to another
 class IDM
 {
 public:

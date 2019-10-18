@@ -7,11 +7,7 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
-
-#define DEBUG__TREE_LB_L1 0
-#define DEBUG__TREE_LB_L2 0
-#define DEBUG__TREE_LB_L3 0
-
+#define TREE_LB_DEBUG_LEVEL 0 // debug level for printfs. From 0 to 3
 
 void CreateTreeLB();
 
@@ -148,9 +144,7 @@ public:
 
 };
 
-// TODO I think the staticXXX functions are ugly. All load balancers should probably
-// just inherit from a common interface, and the load balancers should just register
-// themselves with LBManager instead of registering these functions
+
 class TreeLB : public CBase_TreeLB
 {
 public:
@@ -165,16 +159,14 @@ public:
 
   // start load balancing (non-AtSync mode)  NOTE: This seems to do a broadcast
   // (is this the behavior we want?)
-  inline void StartLB() { thisProxy.ProcessAtSync(); }
-  static void staticStartLB(void *);
+  void StartLB() { thisProxy.ProcessAtSync(); }  // not sure if this is used anymore
+  static void staticStartLB(void *);  // not sure if this is used anymore
 
-  // TODO: I would rename this group of functions (to maybe something like startLBLocal)
-  // since they are also used in non-AtSync mode
-  static void staticAtSync(void *);
   virtual void InvokeLB();  // Start load balancing at this PE
+  // called by LBManager when an actual chare migrates into this PE.
+  // only happens in the last level of the tree
   void Migrated(int waitBarrier=1);
-  void ProcessAtSync();  // Receive a message from AtSync to avoid making projections output look funny
-                         // TODO: do we still need this?
+  void ProcessAtSync();
 
   // send stats up using the comm-tree for this level
   void sendStatsUp(CkMessage *stats);
@@ -183,12 +175,7 @@ public:
 
   void recvLoadTokens(CkMessage *tokens);
 
-  void multicastIDM(const IDM &idm, int num_pes, int *_pes);
-
-  // called by LBManager when an actual chare migrates into this PE.
-  // only happens in last level of tree
-  static void staticObjMovedIn(void *me, LDObjHandle h, bool waitBarrier=true);
-  void objMovedIn(bool waitBarrier=true);
+  void multicastIDM(const IDM &idm, int num_pes, int _pes[]);
 
   void resumeClients();
 
@@ -212,7 +199,7 @@ private:
   void migrateObjects(const IDM &idm);
 
   // load can be actual objects or tokens
-  inline bool checkLoadSent(int level) {
+  bool checkLoadSent(int level) {
     if (load_sent[level] == expected_outgoing[level]) {
       load_sent[level] = expected_outgoing[level] = 0;
       return true;
@@ -220,14 +207,14 @@ private:
   }
 
   // load can be actual objects or tokens
-  inline bool checkLoadReceived(int level) {
+  bool checkLoadReceived(int level) {
     if (load_received[level] == expected_incoming[level]) {
       load_received[level] = expected_incoming[level] = 0;
       return true;
     } else return false;
   }
 
-  inline void checkLoadExchanged(int level) {
+  void checkLoadExchanged(int level) {
     if (checkLoadSent(level) && checkLoadReceived(level))
       loadBalanceSubtree(level);
   }
@@ -244,7 +231,6 @@ private:
   std::vector<int> expected_outgoing;
   std::vector<int> load_sent;
   std::vector<int> load_received;
-  //std::vector<int> notify_after_transfer;
   std::vector<bool> awaitingLB;
 
   double startTime;

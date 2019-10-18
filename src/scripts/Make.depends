@@ -116,7 +116,7 @@ CommonLBs.o: CommonLBs.C LBManager.h LBDatabase.h lbdb.h converse.h \
  CkCheckpointStatus.decl.h ckevacuation.h trace.h trace-bluegene.h \
  pathHistory.h PathHistory.decl.h ckcallback-ccs.h CkCallback.decl.h \
  BaseLB.decl.h CommonLBs.decl.h charm++.h envelope.h sdag.h TreeLB.decl.h \
- idm.h BaseLB.decl.h DistributedLB.decl.h DistBaseLB.decl.h \
+ TreeLB_msg.h BaseLB.decl.h DistributedLB.decl.h DistBaseLB.decl.h \
  LBManager.decl.h CommonLBs.def.h
 
 DistBaseLB.o: DistBaseLB.C BaseLB.h LBManager.h LBDatabase.h lbdb.h \
@@ -187,7 +187,7 @@ EveryLB.o: EveryLB.C LBManager.h LBDatabase.h lbdb.h converse.h \
  CkCheckpointStatus.decl.h ckevacuation.h trace.h trace-bluegene.h \
  pathHistory.h PathHistory.decl.h ckcallback-ccs.h CkCallback.decl.h \
  BaseLB.decl.h EveryLB.decl.h charm++.h envelope.h sdag.h TreeLB.decl.h \
- idm.h BaseLB.decl.h DistributedLB.decl.h DistBaseLB.decl.h \
+ TreeLB_msg.h BaseLB.decl.h DistributedLB.decl.h DistBaseLB.decl.h \
  LBManager.decl.h MetisLB.decl.h CentralLB.decl.h CentralLBMsg.h \
  EveryLB.def.h
 
@@ -292,7 +292,7 @@ LBManager.o: LBManager.C charm++.h charm.h converse.h conv-header.h \
  CentralLB.h BaseLB.h CentralLB.decl.h charm++.h envelope.h sdag.h \
  BaseLB.decl.h LBManager.decl.h CentralLBMsg.h pup_stl.h manager.h \
  topology.h DistributedLB.h DistBaseLB.h DistBaseLB.decl.h \
- DistributedLB.decl.h ckheap.h TreeLB.h TreeLB.decl.h idm.h json.hpp \
+ DistributedLB.decl.h ckheap.h TreeLB.h TreeLB.decl.h TreeLB_msg.h json.hpp \
  LBManager.def.h
 
 LBObj.o: LBObj.C charm++.h charm.h converse.h conv-header.h conv-config.h \
@@ -526,7 +526,7 @@ TreeLB.o: TreeLB.C TreeLB.h BaseLB.h LBManager.h LBDatabase.h lbdb.h \
  ckmigratable.h CkArray.decl.h ckfutures.h CkFutures.decl.h waitqd.h \
  waitqd.decl.h ckcheckpoint.h ckcallback.h CkCheckpointStatus.decl.h \
  ckevacuation.h trace.h trace-bluegene.h pathHistory.h PathHistory.decl.h \
- ckcallback-ccs.h CkCallback.decl.h BaseLB.decl.h TreeLB.decl.h idm.h \
+ ckcallback-ccs.h CkCallback.decl.h BaseLB.decl.h TreeLB.decl.h TreeLB_msg.h \
  spanningTree.h tree_builder.h tree_level.h lb_strategy.h \
  strategy_factory.h greedy.h pheap.h refine.h ../include/TopoManager.h \
  ../include/topomanager_config.h ../include/converse.h tree_level.decl.h \

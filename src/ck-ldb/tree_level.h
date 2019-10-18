@@ -184,7 +184,7 @@ public:
                   obj_local_ids(obj_local_ids) {}
 
       inline void assign(const O *o, P *p) {
-#if DEBUG__TREE_LB_L3
+#if TREE_LB_DEBUG_LEVEL >= 3
         CkPrintf("[%d] Moving object %d from processor %d to %d foreign_obj_id_start=%d\n",
                  CkMyPe(), o->id, o->oldPe, p->id, foreign_obj_id_start);
 #endif
@@ -448,13 +448,9 @@ public:
   }
 
   void loadBalance(std::vector<TreeLBMessage*> &decisions, IDM &idm) {
-#if DEBUG__TREE_LB_L1
-    //print('[' + str(charm.myPe()) + ']', self.__class__, 'loadBalance')
-#endif
-
     const int num_children = stats_msgs.size();
     CkAssert(num_children > 0);
-#if DEBUG__TREE_LB_L1
+#if TREE_LB_DEBUG_LEVEL >= 1
     CkPrintf("[%d] RootLevel::loadBalance, num_children=%d m=%d n=%d\n", CkMyPe(), num_children, m, n);
 #endif
 
@@ -476,7 +472,7 @@ public:
       } else {
         current_strategy++;
       }
-#if DEBUG__TREE_LB_L1
+#if TREE_LB_DEBUG_LEVEL >= 1
       CkPrintf("[%d] RootLevel::loadBalance - strategy took %f secs\n", CkMyPe(), CkWallTimer() - t0);
 #endif
       // need to cast pointer to ensure delete of CMessage_LBStatsMsg_1 is called
@@ -506,10 +502,8 @@ public:
           SubtreeLoadMsg *msg = (SubtreeLoadMsg*)sm;
           int &grp = msg->pe;
           float &load = msg->load;
-//#if DEBUG__TREE_LB_L1
           if (_lb_args.debug() > 1)
             CkPrintf("[%d] PE %d load = %f\n", CkMyPe(), grp, load);
-//#endif
           if (load < avg_grp_load - epsilon) {
             underloaded.emplace_back(grp, load);
           } else if (load > avg_grp_load + epsilon) {
@@ -527,10 +521,8 @@ public:
             float &l2 = underloaded[underloaded_idx].second;
             float transfer = std::min(l1 - avg_grp_load, avg_grp_load - l2);
             solution.emplace_back(g1, g2, int(round(FLOAT_TO_INT_MULT * transfer)));
-//#if DEBUG__TREE_LB_L1
             if (_lb_args.debug() > 0)
               CkPrintf("[%d] Root: moving %f load from %d to %d\n", CkMyPe(), transfer, g1, g2);
-//#endif
             l2 += transfer;
             ///underloaded[underloaded_idx].second += transfer;
             if (l2 >= avg_grp_load - epsilon) underloaded_idx += 1;
@@ -623,7 +615,7 @@ public:
 
     num_children = stats_msgs.size();
     CkAssert(num_children > 0);
-#if DEBUG__TREE_LB_L2
+#if TREE_LB_DEBUG_LEVEL >= 2
     CkPrintf("[%d] NodeSetLevel::mergeStats, num_children=%d m=%d n=%d\n", CkMyPe(), num_children, m, n);
 #endif
 
@@ -656,7 +648,7 @@ public:
       else if (dest_group == CkMyPe()) incoming += load;
       CkAssert(src_group != dest_group);
     }
-#if DEBUG__TREE_LEVELS_L2
+#if TREE_LB_DEBUG_LEVEL >= 2
     CkPrintf("[%d] NodeSetLevel: incoming=%d outgoing=%d\n", CkMyPe(), incoming, outgoing);
 #else
     if (CkMyPe() == 0 && _lb_args.debug() > 1)
@@ -690,7 +682,7 @@ public:
         int nominal_load = d->loads[i];
         outgoing_nominal_load += nominal_load;
         tokens.clear();
-#if DEBUG__TREE_LB_L1
+#if TREE_LB_DEBUG_LEVEL >= 1
         CkPrintf("[%d] NodeSetLevel: I have to transfer %f load to %d\n", CkMyPe(), load, dest);
 #endif
         destinations.push_back(dest);
@@ -701,7 +693,7 @@ public:
           wrapper->removeObj(local_id, oldPe, oload);
           transferred += oload;
           tokens.emplace_back(local_id, oldPe, oload);
-#if DEBUG__TREE_LB_L2
+#if TREE_LB_DEBUG_LEVEL >= 2
           CkPrintf("[%d] Sending obj with local_obj_id=%d oldPe=%d load=%f TO %d\n", CkMyPe(), local_id, oldPe, oload, dest);
 #endif
         }
@@ -725,14 +717,14 @@ public:
     IStrategyWrapper *wrapper = wrappers[current_strategy];
     TokenListMsg *token_set = (TokenListMsg*)msg;
     for (int i=0; i < token_set->num_tokens; i++) {
-#if DEBUG__TREE_LB_L2
+#if TREE_LB_DEBUG_LEVEL >= 2
       CkPrintf("[%d] Adding object with local_id=%d from oldPe=%d with load %f\n",
                CkMyPe(), token_set->local_ids[i], token_set->oldPes[i], token_set->loads[i]);
 #endif
       wrapper->addForeignObject(token_set->local_ids[i], token_set->oldPes[i], token_set->loads[i]);
     }
     int load = token_set->load;
-#if DEBUG__TREE_LB_L2
+#if TREE_LB_DEBUG_LEVEL >= 2
     CkPrintf("[%d] Total nominal load in token set is %d\n", CkMyPe(), load);
 #endif
     delete token_set;
@@ -747,7 +739,7 @@ public:
     if (cutoff()) {
       num_children = stats_msgs.size();
       CkAssert(num_children > 0);
-#if DEBUG__TREE_LB_L2
+#if TREE_LB_DEBUG_LEVEL >= 2
       CkPrintf("[%d] NodeSetLevel::loadBalance (w cutoff), num_children=%d m=%d n=%d\n", CkMyPe(), num_children, m, n);
 #endif
 
@@ -870,7 +862,7 @@ protected:
       m += ((LBStatsMsg_1*)msg)->m;
     }
     CkAssert(m == pes.size());
-#if DEBUG__TREE_LB_L1
+#if TREE_LB_DEBUG_LEVEL >= 1
     if (CkMyPe() == 0)
       CkPrintf("[%d] NodeLevel::withinNodeLoadBalance - m=%d n=%d\n", CkMyPe(), m, n);
 #endif
@@ -883,7 +875,7 @@ protected:
     double t0 = CkWallTimer();
     wrapper->prepStrategy(n, m, stats_msgs, migMsg);
     wrapper->runStrategy(migMsg);
-#if DEBUG__TREE_LB_L2
+#if TREE_LB_DEBUG_LEVEL >= 2
     CkPrintf("[%d] NodeLevel::withinNodeLoadBalance - strategy took %f secs\n", CkMyPe(), CkWallTimer() - t0);
 #endif
     if (current_strategy == wrappers.size() - 1) {
@@ -942,7 +934,7 @@ public:
 
     // TODO verify that non-migratable objects are not added to msg and are only counted as background load
 
-#if DEBUG__TREE_LB_L3
+#if TREE_LB_DEBUG_LEVEL >= 3
     float total_obj_load = 0;
     for (int i=0; i < nobjs; i++) total_obj_load += myObjs[i].wallTime;
     CkPrintf("[%d] PELevel::getStats, myObjs=%d, aggregate_obj_load=%f\n", mype, int(myObjs.size()), total_obj_load);
@@ -998,7 +990,7 @@ public:
       int dest = decision->to_pes[i];
       if (dest != mype) {
         if (dest >= 0) {
-#if DEBUG__TREE_LB_L3
+#if TREE_LB_DEBUG_LEVEL >= 3
           CkPrintf("[%d] (processDecision) My obj %d (abs=%d) moving to %d\n", CkMyPe(), j, i, dest);
 #endif
           if (lbmgr->Migrate(myObjs[j].handle, dest) == 0) {
@@ -1012,7 +1004,7 @@ public:
         }
       }
     }
-#if DEBUG__TREE_LB_L2
+#if TREE_LB_DEBUG_LEVEL >= 2
     CkPrintf("[%d] PELevel::processDecision, incoming=%d outgoing=%d\n", CkMyPe(), incoming, outgoing);
 #endif
   }
@@ -1021,7 +1013,7 @@ public:
     for (auto &move : mig_order) {
       int obj_local_id = move.first;
       int toPe = move.second;
-#if DEBUG__TREE_LB_L3
+#if TREE_LB_DEBUG_LEVEL >= 3
       CkPrintf("[%d] (migrateObjects) migrating object with local ID %d to PE %d\n", CkMyPe(), obj_local_id, toPe);
 #endif
       //import random

@@ -11,17 +11,6 @@ void TreeLB::staticStartLB(void* data) {
   ((TreeLB*)data)->StartLB();
 }
 
-void TreeLB::staticObjMovedIn(void* data, LDObjHandle h, bool waitBarrier) {
-//  ((TreeLB*)data)->objMovedIn(h, waitBarrier);
-}
-
-void TreeLB::Migrated(int waitBarrier){
-  bool barrier = false;
-  if(waitBarrier) barrier = true;
-  objMovedIn(barrier);
-}
-
-
 void TreeLB::init(const CkLBOptions &opts) {
 #if CMK_LBDB_ON
 
@@ -39,8 +28,7 @@ void TreeLB::init(const CkLBOptions &opts) {
     try {
       ifs >> config;
     } catch (const std::exception &e) {
-      CkPrintf("Error reading TreeLB configuration file: %s\n", e.what());
-      CkExit(1);
+      CkAbort("Error reading TreeLB configuration file: %s\n", e.what());
     }
   } else if (_lb_args.legacyCentralizedStrategies().size() > 0) {
     // support legacy mode, e.g. map "+GreedyLB" to PE_Root tree using Greedy
@@ -52,7 +40,10 @@ void TreeLB::init(const CkLBOptions &opts) {
   } else {
     if (CkMyPe() == 0 && !quietModeRequested)
       CkPrintf("[%d] No TreeLB configuration file found. Choosing a default configuration.\n", CkMyPe());
-    // try to pick reasonable defaults
+    // try to pick reasonable defaults. Note that it is unclear what are reasonable
+    // defaults, and the new implementations of Refine (RefineA and RefineB)
+    // are faster than old RefineLB and should be pretty good if want to minimize migrations.
+    // To limit migrations with GreedyRefine, a tolerance > 1.0 is likely needed.
     // the problem with using a 2 or 3 level tree in large jobs is that the root's
     // strategy could take a long time to run, and also many strategies (but not all)
     // could move objects across the whole machine (which means potentially slow migrations
@@ -130,7 +121,6 @@ void TreeLB::configure(LBTreeBuilder &builder, json &config) {
   expected_outgoing.resize(numLevels);
   load_sent.resize(numLevels);
   load_received.resize(numLevels);
-  //notify_after_transfer.resize(numLevels);
   awaitingLB.resize(numLevels);
 
   // reset all values since this may be a re-configuration
@@ -138,7 +128,6 @@ void TreeLB::configure(LBTreeBuilder &builder, json &config) {
   std::fill(expected_outgoing.begin(), expected_outgoing.end(), 0);
   std::fill(load_sent.begin(), load_sent.end(), 0);
   std::fill(load_received.begin(), load_received.end(), 0);
-  //std::fill(notify_after_transfer.begin(), notify_after_transfer.end(), -1);
   std::fill(awaitingLB.begin(), awaitingLB.end(), false);
 
 #endif
@@ -168,7 +157,6 @@ void TreeLB::configure(json &config) {
 void TreeLB::InvokeLB()
 {
 #if CMK_LBDB_ON
-  // NOTE: I'm assuming new LBManager will know when (and when not to) call AtSync
   if (barrier_before_lb) {
     contribute(CkCallback(CkReductionTarget(TreeLB, ProcessAtSync), thisProxy));
   } else {
@@ -281,8 +269,8 @@ void TreeLB::loadBalanceSubtree(int level) {
   }
 }
 
-void TreeLB::multicastIDM(const IDM &mig_order, int num_pes, int *_pes) {
-#if DEBUG__TREE_LB_L3
+void TreeLB::multicastIDM(const IDM &mig_order, int num_pes, int _pes[]) {
+#if TREE_LB_DEBUG_LEVEL >= 3
   fprintf(stderr, "[%d] Received IDM\n", CkMyPe());
 #endif
   ST_RecursivePartition<int*> tb(false, false);
@@ -356,7 +344,7 @@ void TreeLB::receiveDecision(TreeLBMessage *decision, int level) {
 void TreeLB::transferLoadToken(TreeLBMessage *transferMsg, int level) {
   // TODO this is a simplified implementation where the first level where tokens are needed
   // needs to be able to generate the tokens (so, token requests cannot be propagated
-  // down the tree). There is a more advanced implementation in charm4py
+  // down the tree). There is a more advanced implementation in a charm4py branch
   if (logic[level]->makesTokens()) {
     // one token set goes to one destination
     std::vector<TreeLBMessage*> token_sets;
@@ -375,7 +363,7 @@ void TreeLB::transferLoadToken(TreeLBMessage *transferMsg, int level) {
 void TreeLB::recvLoadTokens(CkMessage *tokens) {
   TreeLBMessage *token_set = (TreeLBMessage*)tokens;
   int level = token_set->level;
-#if DEBUG__TREE_LB_L3
+#if TREE_LB_DEBUG_LEVEL >= 3
   fprintf(stderr, "[%d] Received load token, level=%d\n", CkMyPe(), level);
 #endif
   int load = logic[level]->tokensReceived(token_set);
@@ -383,11 +371,11 @@ void TreeLB::recvLoadTokens(CkMessage *tokens) {
   checkLoadExchanged(level);
 }
 
-void TreeLB::objMovedIn( bool waitBarrier) {
+void TreeLB::Migrated(int waitBarrier) {
   if (!waitBarrier)
     CkAbort("TreeLB future migrates not supported\n");
 
-  //fprintf(stderr, "[%d] TreeLB::objMovedIn\n", CkMyPe());
+  //fprintf(stderr, "[%d] TreeLB::Migrated\n", CkMyPe());
 
   int level = 0;
   CkAssert(numLevels > 0 && awaitingLB[level]);
@@ -399,7 +387,7 @@ void TreeLB::migrateObjects(const IDM &mig_order) {
   int level = 0;
   int sent = logic[level]->migrateObjects(mig_order.data.at(CkMyPe()));
   load_sent[level] += sent;
-#if DEBUG__TREE_LB_L2
+#if TREE_LB_DEBUG_LEVEL >= 2
   fprintf(stderr, "[%d] Received IDM order, sent=%d\n", CkMyPe(), sent);
 #endif
   checkLoadExchanged(level);
@@ -409,7 +397,7 @@ void TreeLB::lb_done() {
 
   //fprintf(stderr, "[%d] lb_done step %d lb_time=%f\n", CkMyPe(), lbmgr->step(), CkWallTimer() - startTime);
 
-  // TODO LBManager should do all of this, including global syncResume ******
+  // TODO LBManager should do all of this, including global syncResume
   // Currently, TreeLB does syncResume by setting barrier_after_lb=true
 
   // clear load stats
