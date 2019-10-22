@@ -135,7 +135,8 @@ static void disable_isomalloc(const char * why)
 {
   isomallocStart = nullptr;
   isomallocEnd = nullptr;
-  if (CmiMyPe() == 0) CmiPrintf("Charm++> Disabling isomalloc because %s.\n", why);
+  if (CmiMyPe() == 0)
+    CmiPrintf("Converse> Disabling Isomalloc: %s.\n", why);
 }
 
 #if !CMK_HAS_MMAP
@@ -677,7 +678,7 @@ static void CmiIsomallocSyncHandlerOtherNodes(void * msg)
   CmiIsomallocSyncHandlerDone = 1;
 }
 
-static void CmiIsomallocInitExtent()
+static void CmiIsomallocInitExtent(char ** argv)
 {
 #if 0
   /*Largest value a signed int can hold*/
@@ -739,6 +740,7 @@ static void CmiIsomallocInitExtent()
    * Calculate the intersection of all memory regions on all nodes.
    */
 
+  auto nosync = CmiGetArgFlagDesc(argv, "+no_isomalloc_sync", "disable global synchronization of isomalloc region");
   CmiAssignOnce(&CmiIsomallocSyncHandlerNode0Idx, CmiRegisterHandler(CmiIsomallocSyncHandlerNode0));
   CmiAssignOnce(&CmiIsomallocSyncHandlerOtherNodesIdx, CmiRegisterHandler(CmiIsomallocSyncHandlerOtherNodes));
 
@@ -772,7 +774,12 @@ static void CmiIsomallocInitExtent()
   }
   else
 #endif
-  if (CmiNumNodes() > 1)
+  if (nosync)
+  {
+    if (CmiMyPe() == 0)
+      CmiPrintf("Isomalloc> Disabling global synchronization of address space.\n");
+  }
+  else if (CmiNumNodes() > 1)
   {
     if (CmiMyRank() == 0)
     {
@@ -2120,11 +2127,11 @@ void CmiIsomallocInit(char ** argv)
 #endif
 
 #if CMK_NO_ISO_MALLOC
-  disable_isomalloc("isomalloc disabled by conv-mach");
+  disable_isomalloc("unsupported platform");
 #else
   if (CmiGetArgFlagDesc(argv, "+noisomalloc", "disable isomalloc"))
   {
-    disable_isomalloc("isomalloc disabled by user.");
+    disable_isomalloc("specified by user");
     return;
   }
 #if CMK_MMAP_PROBE
@@ -2150,7 +2157,7 @@ void CmiIsomallocInit(char ** argv)
   }
   else
   {
-    CmiIsomallocInitExtent();
+    CmiIsomallocInitExtent(argv);
   }
 #endif
 }
