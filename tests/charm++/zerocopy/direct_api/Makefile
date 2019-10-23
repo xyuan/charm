@@ -32,6 +32,12 @@ ifeq ($(CMK_USE_CMA),1)
 	$(call run, +p4 ./direct_api 100 +noCMAForZC ++ppn 2)
 endif
 
+gentest: all
+	$(call run, +p$(P_VAL) ./direct_api $$(( $(P_VAL) * 10)) ++ppn $(PPN_VAL))
+ifeq ($(CMK_USE_CMA),1)
+	$(call run, +p$(P_VAL) ./direct_api $$(( $(P_VAL) * 10)) ++ppn $(PPN_VAL)) +noCMAForZC
+endif
+
 clean:
 	rm -f *.decl.h *.def.h *.o
 	rm -f direct_api charmrun cifiles
