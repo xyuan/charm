@@ -800,7 +800,9 @@ static void CmiIsomallocInitExtent(char ** argv)
         CsdSchedulePoll();
 
         if (IsoRegion.s >= IsoRegion.e)
-          CmiAbort("Isomalloc> failed to find consolidated region: %" PRIx64 " - %" PRIx64 ".\n", IsoRegion.s, IsoRegion.e);
+          CmiAbort("Isomalloc> failed to find consolidated region: %" PRIx64 " - %" PRIx64 ".\n"
+                   "Try running with +no_isomalloc_sync if you do not need this functionality.\n",
+                   IsoRegion.s, IsoRegion.e);
 
         DEBUG_PRINT("Charm++> Consolidated Isomalloc memory region: %p - %p (%" PRId64 " MB).\n",
                     (void *)IsoRegion.s, (void *)IsoRegion.e, (IsoRegion.e - IsoRegion.s) / meg);
