@@ -1,5 +1,5 @@
--include ../../../common.mk
 -include ../../../../include/conv-mach-opt.mak
+-include ../../../common.mk
 CHARMDIR = ../../../..
 CHARMC = $(CHARMDIR)/bin/charmc $(OPTS)
 
@@ -30,6 +30,12 @@ smptest: all
 ifeq ($(CMK_USE_CMA),1)
 	$(call run, +p2 ./zc_post_modify_size +noCMAForZC ++ppn 2)
 	$(call run, +p4 ./zc_post_modify_size +noCMAForZC ++ppn 2)
+endif
+
+gentest: all
+	$(call genrun, ./zc_post_modify_size)
+ifeq ($(CMK_USE_CMA),1)
+	$(call genrun, ./zc_post_modify_size +noCMAForZC)
 endif
 
 clean:

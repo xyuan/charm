@@ -14,6 +14,8 @@ test: $(foreach i,$(TESTDIRS),test-$i)
 
 smptest: $(foreach i,$(TESTDIRS),smptest-$i)
 
+gentest: $(foreach i,$(TESTDIRS),gentest-$i)
+
 clean: $(foreach i,$(DIRS),clean-$i)
 	rm -f TAGS #*#
 	rm -f core *~
@@ -26,6 +28,9 @@ $(foreach i,$(DIRS),test-$i):
 
 $(foreach i,$(DIRS),smptest-$i):
 	$(MAKE) -C $(subst smptest-,,$@) smptest OPTS='$(OPTS)' TESTOPTS='$(TESTOPTS)'
+
+$(foreach i,$(DIRS),gentest-$i):
+	$(MAKE) -C $(subst gentest-,,$@) gentest OPTS='$(OPTS)' TESTOPTS='$(TESTOPTS)'
 
 $(foreach i,$(DIRS),clean-$i):
 	$(MAKE) -C $(subst clean-,,$@) clean OPTS='$(OPTS)'

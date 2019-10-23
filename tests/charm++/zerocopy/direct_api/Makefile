@@ -1,5 +1,5 @@
--include ../../../common.mk
 -include ../../../../include/conv-mach-opt.mak
+-include ../../../common.mk
 CHARMDIR = ../../../..
 CHARMC = $(CHARMDIR)/bin/charmc $(OPTS)
 
@@ -33,9 +33,9 @@ ifeq ($(CMK_USE_CMA),1)
 endif
 
 gentest: all
-	$(call run, +p$(P_VAL) ./direct_api $$(( $(P_VAL) * 10)) ++ppn $(PPN_VAL))
+	$(call genrun, ./direct_api $$(( $(P_VAL) * 10)))
 ifeq ($(CMK_USE_CMA),1)
-	$(call run, +p$(P_VAL) ./direct_api $$(( $(P_VAL) * 10)) ++ppn $(PPN_VAL)) +noCMAForZC
+	$(call genrun, ./direct_api $$(( $(P_VAL) * 10)) +noCMAForZC)
 endif
 
 clean:

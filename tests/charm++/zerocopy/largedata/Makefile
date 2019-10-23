@@ -1,5 +1,5 @@
--include ../../../common.mk
 -include ../../../../include/conv-mach-opt.mak
+-include ../../../common.mk
 SRC=../../../../src
 CHARMC=../../../../bin/charmc $(OPTS)
 
@@ -39,6 +39,12 @@ smptest: all
 ifeq ($(CMK_USE_CMA),1)
 	$(call run, ./pgm +p4 200000 10 +noCMAForZC ++ppn 2)
 	$(call run, ./pgm +p4 200000 10 +noCMAForZC ++ppn 4)
+endif
+
+gentest: all
+	$(call genrun, ./pgm 200000 10)
+ifeq ($(CMK_USE_CMA),1)
+	$(call genrun, ./pgm 200000 10 +noCMAForZC)
 endif
 
 test-bench: all

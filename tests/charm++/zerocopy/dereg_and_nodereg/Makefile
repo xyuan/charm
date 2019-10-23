@@ -1,5 +1,5 @@
--include ../../../common.mk
 -include ../../../../include/conv-mach-opt.mak
+-include ../../../common.mk
 CHARMDIR = ../../../..
 CHARMC = $(CHARMDIR)/bin/charmc $(OPTS)
 
@@ -32,6 +32,12 @@ smptest: all
 ifeq ($(CMK_USE_CMA),1)
 	$(call run, +p4 ./dereg_and_nodereg 50 +noCMAForZC ++ppn 4)
 	$(call run, +p6 ./dereg_and_nodereg 100 +noCMAForZC ++ppn 3)
+endif
+
+gentest: all
+	$(call genrun, ./dereg_and_nodereg $$(( $(P_VAL) * 10)))
+ifeq ($(CMK_USE_CMA),1)
+	$(call genrun, ./dereg_and_nodereg $$(( $(P_VAL) * 10)) +noCMAForZC)
 endif
 
 clean:
