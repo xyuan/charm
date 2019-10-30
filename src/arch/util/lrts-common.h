@@ -32,12 +32,23 @@ enum cmiCMAMsgType {
   CMK_CMA_ACK_MSG=2,
 };
 
+/* Support for Nocopy Direct API */
+typedef struct _cmi_common_rdma_info {
 #if CMK_USE_CMA
-#undef  CMK_COMMON_NOCOPY_DIRECT_BYTES // previous definition is in conv-mach-common.h
-#define CMK_COMMON_NOCOPY_DIRECT_BYTES sizeof(pid_t)
+  pid_t pid;
+#elif defined _MSC_VER
+  char empty;
 #endif
+} CmiCommonRdmaInfo_t;
 
 #if CMK_ONESIDED_IMPL
+//#if CMK_USE_CMA
+#undef  CMK_COMMON_NOCOPY_DIRECT_BYTES // previous definition is in conv-mach-common.h
+#define CMK_COMMON_NOCOPY_DIRECT_BYTES sizeof(CmiCommonRdmaInfo_t)
+//#endif
+
+
+
 // This macro is used to specify the threshold size in bytes, above which
 // the Zerocopy API is used to broadcast large readonly variables to all
 // processes

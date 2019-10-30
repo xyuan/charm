@@ -4,15 +4,6 @@
 /*Function Pointer to Acknowledgement Handler*/
 typedef void (*RdmaAckHandlerFn)(void *token);
 
-/* Support for Nocopy Direct API */
-typedef struct _cmi_common_rdma_info {
-#if CMK_USE_CMA
-  pid_t pid;
-#elif defined _MSC_VER
-  char empty;
-#endif
-} CmiCommonRdmaInfo_t;
-
 /* Set the generic converse/LRTS information */
 void CmiSetRdmaCommonInfo(void *info, const void *ptr, int size) {
 #if CMK_USE_CMA

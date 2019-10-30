@@ -418,6 +418,8 @@ void CkRdmaDirectAckHandler(void *ack) {
   CkCallback *srcCb = (CkCallback *)(info->srcAck);
   CkCallback *destCb = (CkCallback *)(info->destAck);
 
+  CmiPrintf("[%d][%d][%d] ********* CkRdmaDirectAckHandler opMode is %d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), info->opMode);
+
   switch(info->opMode) {
     case CMK_DIRECT_API             : handleDirectApiCompletion(info); // Ncpy Direct API
                                       break;
@@ -536,6 +538,7 @@ void performRgets(char *ref, int numops, int extraSize) {
     NcpyEmBufferInfo *ncpyEmBufferInfo = (NcpyEmBufferInfo *)(ref + sizeof(NcpyEmInfo) + i *(sizeof(NcpyEmBufferInfo) + extraSize));
     NcpyOperationInfo *ncpyOpInfo = &(ncpyEmBufferInfo->ncpyOpInfo);
     zcQdIncrement();
+    //CmiPrintf("[%d][%d][%d] Launching CmiIssueRget ncpyOpInfo->srcPe=%d \n", CmiMyPe(), CmiMyNode(), CmiMyRank(), ncpyOpInfo->srcPe);
     CmiIssueRget(ncpyOpInfo);
   }
 }
@@ -569,6 +572,7 @@ inline void deregisterSrcBuffer(NcpyOperationInfo *ncpyOpInfo) {
 // Method called on completion of an Zcpy EM API (Send or Recv, P2P or BCAST)
 void CkRdmaEMAckHandler(int destPe, void *ack) {
 
+  CmiPrintf("[%d][%d][%d] CkRdmaEmAckHandler \n", CmiMyPe(), CmiMyNode(), CmiMyRank());
   if(_topoTree == NULL) CkAbort("CkRdmaIssueRgets:: topo tree has not been calculated \n");
 
   NcpyEmBufferInfo *emBuffInfo = (NcpyEmBufferInfo *)(ack);
@@ -609,6 +613,7 @@ void CkRdmaEMAckHandler(int destPe, void *ack) {
   }
 #endif
 
+  //CmiPrintf("[%d][%d][%d] CkRdmaEmAckHandler counter=%d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), ncpyEmInfo->counter);
   if(ncpyEmInfo->counter == ncpyEmInfo->numOps) {
     // All operations have been completed
 
@@ -886,6 +891,7 @@ void handleEntryMethodApiCompletion(NcpyOperationInfo *info) {
 void handleReverseEntryMethodApiCompletion(NcpyOperationInfo *info) {
 
   if(info->ackMode == CMK_SRC_DEST_ACK || info->ackMode == CMK_DEST_ACK) {
+    CmiPrintf("[%d][%d][%d] handleReverse: invokeRemoteNcpyAckHandler\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
     // Send a message to the receiver to invoke CkRdmaEMAckHandler to update the counter
     invokeRemoteNcpyAckHandler(info->destPe, info->refPtr, ncpyHandlerIdx::EM_ACK);
   }

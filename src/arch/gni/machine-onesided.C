@@ -60,6 +60,7 @@ gni_return_t post_rdma(uint64_t remote_addr, gni_mem_handle_t remote_mem_hndl,
   if(type == GNI_POST_RDMA_GET)
     CmiEnforce(((local_addr % 4) == 0) && ((remote_addr) % 4 == 0));
 
+  CmiPrintf("[%d][%d][%d] ###### launching PostRdma\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
   CMI_GNI_LOCK(rdma_onesided_cq_lock);
   status = GNI_PostRdma(ep_hndl_array[destNode], pd);
   CMI_GNI_UNLOCK(rdma_onesided_cq_lock);
@@ -101,6 +102,7 @@ void PumpOneSidedRDMATransactions(gni_cq_handle_t rdma_cq, CmiNodeLock rdma_cq_l
       if(tmp_pd->type == GNI_POST_RDMA_GET){
 
         if (tmp_pd->first_operand == DIRECT_SEND_RECV) {
+          CmiPrintf("[%d][%d][%d] ###### GET completed, calling Direct handler\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
           // Call the ack handler function if used for direct api
           CmiInvokeNcpyAck((void *)tmp_pd->second_operand);
         } else {
@@ -110,12 +112,17 @@ void PumpOneSidedRDMATransactions(gni_cq_handle_t rdma_cq, CmiNodeLock rdma_cq_l
       }
       else if(tmp_pd->type == GNI_POST_RDMA_PUT){
 
+          CmiPrintf("[%d][%d][%d] ###### PUT completed 1\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
+
         if (tmp_pd->first_operand == DIRECT_SEND_RECV) {
+
+          CmiPrintf("[%d][%d][%d] ###### PUT completed, calling Direct handler\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
           // Call the ack handler function if used for direct api
           CmiInvokeNcpyAck((void *)tmp_pd->second_operand);
 
         } else if (tmp_pd->first_operand == DIRECT_SEND_RECV_UNALIGNED) {
 
+          CmiPrintf("[%d][%d][%d] ###### PUT completed UNALIGNED, calling Direct handler\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
           // Send the metadata back to the original PE which invoked PUT
           // The original PE then calls the ack handler function
           CmiGNIRzvRdmaDirectInfo_t *putOpInfo = (CmiGNIRzvRdmaDirectInfo_t *)tmp_pd->second_operand;
@@ -130,6 +137,7 @@ void PumpOneSidedRDMATransactions(gni_cq_handle_t rdma_cq, CmiNodeLock rdma_cq_l
         }  else {
           CmiAbort("Invalid case!\n");
         }
+
         free(tmp_pd);
       }
       else{
@@ -222,6 +230,8 @@ void LrtsIssueRget(NcpyOperationInfo *ncpyOpInfo) {
       buffer_small_msgs(&smsg_queue, ncpyOpInfo, ncpyOpInfo->ncpyOpInfoSize, CmiNodeOf(ncpyOpInfo->srcPe), RDMA_COMM_PERFORM_GET_TAG);
 #else // non-smp mode
       // perform GET directly
+
+      CmiPrintf("[%d][%d][%d] LrtsIssueRget perform get directly\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
       gni_return_t status = post_rdma(
                             src_addr,
                             ((CmiGNIRzvRdmaPtr_t *)((char *)(ncpyOpInfo->srcLayerInfo) + CmiGetRdmaCommonInfoSize()))->mem_hndl,
@@ -247,6 +257,7 @@ void LrtsIssueRget(NcpyOperationInfo *ncpyOpInfo) {
       // send the small message directly
       int msgMode = (ncpyOpInfo->freeMe == CMK_FREE_NCPYOPINFO) ? CHARM_SMSG : SMSG_DONT_FREE;
 
+      CmiPrintf("[%d][%d][%d] ####### LrtsIssueRget send data to the other side to perform PUT and freeMe is %d\n", CmiMyPe(), CmiMyNode(), CmiMyRank(), ncpyOpInfo->freeMe);
       gni_return_t status = send_smsg_message(&smsg_queue, CmiNodeOf(ncpyOpInfo->srcPe), ncpyOpInfo, ncpyOpInfo->ncpyOpInfoSize, RDMA_PUT_MD_DIRECT_TAG, 0, NULL, SMSG_DONT_FREE, 1);
 #if !CMK_SMSGS_FREE_AFTER_EVENT
       if(status == GNI_RC_SUCCESS && ncpyOpInfo->freeMe == CMK_FREE_NCPYOPINFO) {

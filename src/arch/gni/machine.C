@@ -2221,6 +2221,7 @@ static void PumpNetworkSmsg()
 
                 resetNcpyOpInfoPointers(newNcpyOpInfo);
 
+                CmiPrintf("[%d][%d][%d] ###### Reverse op\n", CmiMyPe(), CmiMyNode(), CmiMyRank());
                 post_rdma((uint64_t)newNcpyOpInfo->destPtr,
                           ((CmiGNIRzvRdmaPtr_t *)((char *)(newNcpyOpInfo->destLayerInfo) + CmiGetRdmaCommonInfoSize()))->mem_hndl,
                           (uint64_t)newNcpyOpInfo->srcPtr,

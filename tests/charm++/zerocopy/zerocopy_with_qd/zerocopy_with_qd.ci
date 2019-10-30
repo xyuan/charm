@@ -3,7 +3,7 @@ mainmodule zerocopy_with_qd {
   readonly int arr_size;
   readonly int vec_size;
 
-  readonly int num_arr1[2000000];
+  readonly int num_arr1[200];
   readonly std::vector<int> num_vec1;
 
   readonly int numElements;
@@ -26,8 +26,7 @@ mainmodule zerocopy_with_qd {
     entry void testEmP2pSendApi();
 
     entry void recvEmSendApiBuffer(nocopy char buff1[size1], int size1,
-                                   nocopy char buff2[size2], int size2,
-                                   nocopy char buff3[size3], int size3);
+                                   nocopy char buff2[size2], int size2);
 
     entry void testEmP2pPostApi();
 

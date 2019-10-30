@@ -229,7 +229,7 @@ class zerocopyObject : public CBase_zerocopyObject{
         DEBUG(ckout<<"["<<CkMyPe()<<"] "<<thisIndex<<"->"<<destIndex<<": ZeroCopy send completed"<<endl;)
         if(thisIndex == 0)
           CkPrintf("zerocopySend: completed\n");
-        thisProxy[destIndex].mixedSend(iSize1, iArr1, dSize1, CkSendBuffer(dArr1), iSize2, CkSendBuffer(iArr2), dSize2, dArr2);
+        //thisProxy[destIndex].mixedSend(iSize1, iArr1, dSize1, CkSendBuffer(dArr1), iSize2, CkSendBuffer(iArr2), dSize2, dArr2);
       }
       else{
         copyArray(iArr1, ptr1, n1);
