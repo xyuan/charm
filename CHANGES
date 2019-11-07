@@ -113,8 +113,8 @@ Charm++ Features & Fixes:
 - Various improvements to Charm4Py, such as a new sections implementation, are
   described in the charm4py repository on GitHub.
   
-- The CmiAbort and CkAbort functions now support printf-style format strings.
-  Please make sure to replace '%' with '%%' in the argument string to print a '%'.
+- Added CmiAbortf and CkAbortf variants of the CmiAbort and CkAbort functions that
+  support printf-style format strings.
 
 Adaptive MPI:
 
