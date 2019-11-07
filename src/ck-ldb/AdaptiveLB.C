@@ -31,28 +31,28 @@ AdaptiveLB::AdaptiveLB(const CkLBOptions &opt): CBase_AdaptiveLB(opt)
 
   LBAllocFn fn = getLBAllocFn(greedyLBString);
   if (fn == NULL) {
-    CkAbort("LB> Invalid load balancer: %s.\n", greedyLBString);
+    CkAbortf("LB> Invalid load balancer: %s.\n", greedyLBString);
   }
   BaseLB *glb = fn();
   greedyLB = (CentralLB*)glb;
 
   fn = getLBAllocFn(refineLBString);
   if (fn == NULL) {
-    CkAbort("LB> Invalid load balancer: %s.\n", refineLBString);
+    CkAbortf("LB> Invalid load balancer: %s.\n", refineLBString);
   }
   BaseLB *rlb = fn();
   refineLB = (CentralLB*)rlb;
 
   fn = getLBAllocFn(metisLBString);
   if (fn == NULL) {
-    CkAbort("LB> Invalid load balancer: %s.\n", metisLBString);
+    CkAbortf("LB> Invalid load balancer: %s.\n", metisLBString);
   }
   BaseLB *slb = fn();
   metisLB = (CentralLB*)slb;
 
   fn = getLBAllocFn(commRefineLBString);
   if (fn == NULL) {
-    CkAbort("LB> Invalid load balancer: %s.\n", commRefineLBString);
+    CkAbortf("LB> Invalid load balancer: %s.\n", commRefineLBString);
   }
   BaseLB *crlb = fn();
   commRefineLB = (CentralLB*)crlb;

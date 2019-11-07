@@ -1069,15 +1069,10 @@ void ConverseExit(int exitcode) {
 }
 
 /* exit() called on any node would abort the whole program */
-void CmiAbort(const char * message, ...) {
-    char newmsg[256];
-    va_list args;
-    va_start(args, message);
-    vsnprintf(newmsg, sizeof(newmsg), message, args);
-    va_end(args);
+void CmiAbort(const char * msg) {
     CmiError("------------- Processor %d Exiting: Called CmiAbort ------------\n"
              "{snd:%d,rcv:%d} Reason: %s\n",CmiMyPe(),
-             MSGQLEN(), ORECVS(), newmsg);
+             MSGQLEN(), ORECVS(), msg);
 
     //CmiPrintStackTrace(0);
     //while (msgQueueLen > 0 || outstanding_recvs > 0) {
@@ -1086,6 +1081,15 @@ void CmiAbort(const char * message, ...) {
     //CmiBarrier();
     assert (0);
     CMI_NORETURN_FUNCTION_END
+}
+
+void CmiAbortf(const char * fmt, ...) {
+    char newmsg[256];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(newmsg, sizeof(newmsg), fmt, args);
+    va_end(args);
+    CmiAbort(newmsg);
 }
 
 #if CMK_NODE_QUEUE_AVAILABLE

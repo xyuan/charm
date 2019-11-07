@@ -14,7 +14,12 @@ Orion Sky Lawlor, olawlor@acm.org, 2003/8/15
 #include "charm-api.h"
 
 /* CkPrintf/CkAbort support: */
-extern "C" void CmiAbort(const char *fmt, ...) {
+extern "C" void CmiAbort(const char *msg) {
+	fprintf(stderr, "Fatal error> %s\n");
+	abort();
+}
+
+extern "C" void CmiAbortf(const char *fmt, ...) {
 	fprintf(stderr, "Fatal error> ");
 	va_list p; va_start(p, fmt);
 	vfprintf(stderr, fmt, p);

@@ -22,16 +22,21 @@ void ConverseCommonExit(void);
  *
  ************************************************************************/
 
-void CmiAbort(const char *message, ...)
+void CmiAbort(const char *msg)
+{
+  CmiError("%s\n", msg);
+  exit(1);
+  CMI_NORETURN_FUNCTION_END
+}
+
+void CmiAbortf(const char *fmt, ...)
 {
   char newmsg[256];
   va_list args;
-  va_start(args, message);
-  vsnprintf(newmsg, sizeof(newmsg), message, args);
+  va_start(args, fmt);
+  vsnprintf(newmsg, sizeof(newmsg), fmt, args);
   va_end(args);
-  CmiError("%s\n", newmsg);
-  exit(1);
-  CMI_NORETURN_FUNCTION_END
+  CmiAbort(newmsg);
 }
 
 /*****************************************************************************

@@ -65,7 +65,7 @@ bool _lb_debug2=0;
       if (topofn == NULL) {
         CmiPrintf("NeighborCommLB> Fatal error: Unknown topology: %s. Choose from:\n", _lbtopo);
         printoutTopo();
-        CkAbort("NeighborCommLB> Fatal error: Unknown topology: %s", _lbtopo);
+        CkAbortf("NeighborCommLB> Fatal error: Unknown topology: %s", _lbtopo);
       }
       topo = topofn(CkNumPes());
     }
@@ -75,7 +75,7 @@ bool _lb_debug2=0;
     if (dimension == -1) {
       CmiPrintf("NeighborCommLB> Fatal error: Unsupported topology: %s. Only some of the following are supported:\n", _lbtopo);
       printoutTopo();
-      CkAbort("NeighborCommLB> Fatal error: Unsupported topology: %s", _lbtopo);
+      CkAbortf("NeighborCommLB> Fatal error: Unsupported topology: %s", _lbtopo);
     }
 
     // Position of this processor

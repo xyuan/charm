@@ -2860,12 +2860,12 @@ class CkMessageDetailReplay : public CkMessageWatcher {
     CmiUInt4 size; size_t nread;
     if ((nread=fread(&size, 4, 1, f)) < 1) {
       if (feof(f)) return NULL;
-      CkAbort("Broken record file (metadata) got %zu\n",nread);
+      CkAbortf("Broken record file (metadata) got %zu\n",nread);
     }
     void *env = CmiAlloc(size);
     long tell = ftell(f);
     if ((nread=fread(env, size, 1, f)) < 1) {
-      CkAbort("Broken record file (data) expecting %d, got %zu (file position %ld)\n",size,nread,tell);
+      CkAbortf("Broken record file (data) expecting %d, got %zu (file position %ld)\n",size,nread,tell);
     }
     //*(int*)env = 0x34567890; // set first integer as magic
     return env;

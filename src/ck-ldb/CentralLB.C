@@ -1635,7 +1635,7 @@ void CentralLB::readStatsMsgs(const char* filename)
   int i;
   FILE *f = fopen(filename, "r");
   if (f==NULL) {
-    CkAbort("Fatal Error> Cannot open LB Dump file %s!\n", filename);
+    CkAbortf("Fatal Error> Cannot open LB Dump file %s!\n", filename);
   }
 
   // at this stage, we need to rebuild the statsMsgList and
@@ -1681,7 +1681,7 @@ void CentralLB::writeStatsMsgs(const char* filename)
 #if CMK_LBDB_ON
   FILE *f = fopen(filename, "w");
   if (f==NULL) {
-    CkAbort("Fatal Error> writeStatsMsgs failed to open the output file %s!\n", filename);
+    CkAbortf("Fatal Error> writeStatsMsgs failed to open the output file %s!\n", filename);
   }
 
   const PUP::machineInfo &machInfo = PUP::machineInfo::current();

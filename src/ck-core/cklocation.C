@@ -1553,14 +1553,18 @@ CkMigratable::~CkMigratable() {
 	thisIndexMax.dimension=0;
 }
 
-void CkMigratable::CkAbort(const char *format, ...) const {
+void CkMigratable::CkAbort(const char *message) const {
+	::CkAbortf("CkMigratable '%s' aborting: %s", _chareTable[thisChareType]->name, message);
+}
+
+void CkMigratable::CkAbortf(const char *format, ...) const {
 	char newmsg[256];
 	va_list args;
 	va_start(args, format);
 	vsnprintf(newmsg, sizeof(newmsg), format, args);
 	va_end(args);
 
-	::CkAbort("CkMigratable '%s' aborting: %s", _chareTable[thisChareType]->name, newmsg);
+	CkAbort(newmsg);
 }
 
 void CkMigratable::ResumeFromSync(void)
@@ -2950,7 +2954,7 @@ void CkLocMgr::emigrate(CkLocRec *rec,int toPe)
 	}
 #if CMK_ERROR_CHECKING
 	if (bufSize > std::numeric_limits<int>::max()) {
-		CkAbort("Cannot migrate an object with size greater than %d bytes!\n", std::numeric_limits<int>::max());
+		CkAbortf("Cannot migrate an object with size greater than %d bytes!\n", std::numeric_limits<int>::max());
 	}
 #endif
 

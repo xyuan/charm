@@ -43,7 +43,7 @@ NborBaseLB::NborBaseLB(const CkLBOptions &opt): CBase_NborBaseLB(opt)
   // so I'll just set them to illegal values here.
   LBtopoFn topofn = LBTopoLookup(_lbtopo);
   if (topofn == NULL) {
-    CkAbort("LB> Fatal error: Unknown topology: %s.\n", _lbtopo);
+    CkAbortf("LB> Fatal error: Unknown topology: %s.\n", _lbtopo);
   }
   topo = topofn(CkNumPes());
 

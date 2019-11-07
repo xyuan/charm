@@ -444,7 +444,12 @@ int ArrayElement::ckDebugChareID(char *str, int limit) {
 }
 
 /// A more verbose form of abort
-void ArrayElement::CkAbort(const char *format, ...) const
+void ArrayElement::CkAbort(const char *message) const
+{
+	CkMigratable::CkAbortf("[%d] Array element at index %s aborting:\n%s", CkMyPe(), idx2str(thisIndexMax), message);
+}
+
+void ArrayElement::CkAbortf(const char *format, ...) const
 {
 	char newmsg[256];
 	va_list args;
@@ -452,7 +457,7 @@ void ArrayElement::CkAbort(const char *format, ...) const
 	vsnprintf(newmsg, sizeof(newmsg), format, args);
 	va_end(args);
 
-	CkMigratable::CkAbort("[%d] Array element at index %s aborting:\n%s", CkMyPe(), idx2str(thisIndexMax), newmsg);
+	CkAbort(newmsg);
 }
 
 void ArrayElement::recvBroadcast(CkMessage *m){

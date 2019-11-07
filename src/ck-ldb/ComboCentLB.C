@@ -31,7 +31,7 @@ ComboCentLB::ComboCentLB(const CkLBOptions &opt): CBase_ComboCentLB(opt)
   while (p) {
     LBAllocFn fn = getLBAllocFn(p);
     if (fn == NULL) {
-      CkAbort("LB> Invalid load balancer: %s.\n", p);
+      CkAbortf("LB> Invalid load balancer: %s.\n", p);
     }
     BaseLB *alb = fn();
     clbs.push_back((CentralLB*)alb);

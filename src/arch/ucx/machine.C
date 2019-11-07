@@ -119,14 +119,14 @@ static void UcxRxReqCompleted(void *request, ucs_status_t status,
 #define UCX_CHECK_STATUS(_status, _str) \
 { \
     if (UCS_STATUS_IS_ERR(_status)) { \
-        CmiAbort("UCX: " _str " failed: %s", ucs_status_string(_status)); \
+        CmiAbortf("UCX: " _str " failed: %s", ucs_status_string(_status)); \
     } \
 }
 
 #define UCX_CHECK_RET(_ret, _str, _cond) \
 { \
     if (_cond) { \
-        CmiAbort("UCX: " _str " failed: %d", _ret); \
+        CmiAbortf("UCX: " _str " failed: %d", _ret); \
     } \
 }
 

@@ -48,7 +48,7 @@ int ampiErrhandler(const char* func, int errcode) noexcept {
     int errstrlen;
     char errstr[MPI_MAX_ERROR_STRING];
     MPI_Error_string(errcode, errstr, &errstrlen);
-    CkAbort("%s failed with error code %s", func, errstr);
+    CkAbortf("%s failed with error code %s", func, errstr);
   }
   return errcode;
 }
@@ -1559,7 +1559,7 @@ TCharm *ampiParent::registerAmpi(ampi *ptr,ampiCommStruct s,bool forMigration) n
     } else if (isIntra(comm)) {
       intraChildRegister(s);
     }else
-      CkAbort("ampiParent received child with bad communicator: %d", comm);
+      CkAbortf("ampiParent received child with bad communicator: %d", comm);
   }
 
   return thread;

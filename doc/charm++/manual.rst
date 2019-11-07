@@ -542,10 +542,12 @@ when running a Charm++ program.
 ``void CkAssert(int expression)``
 Aborts the program if expression is 0.
 
-``void CkAbort(const char *format, ...)``
+``void CkAbort(const char *message)``
 Causes the program to abort, printing
-the given error message. Supports printf-style formatting.
-This function never returns.
+the given error message. This function never returns.
+
+``void CkAbortf(const char *format, ...)``
+Same as ``CkAbort``, but supports printf-style formatting.
 
 ``void CkExit()``
 This call informs the Charm RTS that computation on all

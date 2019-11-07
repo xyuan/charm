@@ -35,7 +35,7 @@ NodeLevelLB::NodeLevelLB(const CkLBOptions &opt): CBase_NodeLevelLB(opt) {
   while (lbname) {
     LBAllocFn fn = getLBAllocFn(lbname);
     if (fn == NULL) {
-      CkAbort("LB> Invalid load balancer: %s.\n", lbname);
+      CkAbortf("LB> Invalid load balancer: %s.\n", lbname);
     }
     BaseLB *alb = fn();
     clbs.push_back((CentralLB*)alb);

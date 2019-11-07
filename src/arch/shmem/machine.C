@@ -473,18 +473,22 @@ void CmiFreeMulticastFn(CmiGroup grp, int size, char *msg)
  *
  ************************************************************************/
 
-void CmiAbort(const char *message, ...)
+void CmiAbort(const char *msg)
 {
-  char newmsg[256];
-  va_list args;
-  va_start(args, message);
-  vsnprintf(newmsg, sizeof(newmsg), message, args);
-  va_end(args);
-  CmiError(newmsg);
-  CmiError("\n");
+  CmiError("%s\n", msg);
   /* *(char*)NULL = 0; */
   exit(1);
   CMI_NORETURN_FUNCTION_END
+}
+
+void CmiAbortf(const char *fmt, ...)
+{
+  char newmsg[256];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(newmsg, sizeof(newmsg), fmt, args);
+  va_end(args);
+  CmiAbort(newmsg);
 }
 
 /**********************************************************************

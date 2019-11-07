@@ -4015,7 +4015,7 @@ void CmiError(const char *format, ...)
 
 void __cmi_assert(const char *errmsg)
 {
-  CmiAbort("[%d] %s\n", CmiMyPe(), errmsg);
+  CmiAbortf("[%d] %s\n", CmiMyPe(), errmsg);
 }
 
 char *CmiCopyMsg(char *msg, int len)

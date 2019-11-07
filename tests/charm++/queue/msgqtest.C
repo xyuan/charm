@@ -210,7 +210,7 @@ struct main : public CBase_main
 #endif
   RUN_TEST(test_enumerate);
   if (fail) {
-    CkAbort("%d/%d tests failed\n", fail, tests);
+    CkAbortf("%d/%d tests failed\n", fail, tests);
   }
   else {
     CkPrintf("All %d stl msgQ tests passed\n", tests);

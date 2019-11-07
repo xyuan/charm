@@ -80,11 +80,12 @@ public:
 
 protected:
   /// A more verbose form of abort
+  CMK_NORETURN virtual void CkAbort(const char *message) const;
   CMK_NORETURN
 #if defined __GNUC__ || defined __clang__
   __attribute__ ((format (printf, 2, 3)))
 #endif
-  virtual void CkAbort(const char *format, ...) const;
+  virtual void CkAbortf(const char *format, ...) const;
 
 public:
   virtual void ResumeFromSync(void);

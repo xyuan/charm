@@ -50,6 +50,7 @@ extern "C" {
 #define CkScanf                 CmiScanf
 #define CkError                 CmiError
 #define CkAbort                 CmiAbort
+#define CkAbortf                CmiAbortf
 #define CkAssert                CmiAssert
 #define CkSetPeHelpsOtherThreads CmiSetPeHelpsOtherThreads
 

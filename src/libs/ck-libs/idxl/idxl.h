@@ -22,7 +22,7 @@ Orion Sky Lawlor, olawlor@acm.org, 1/3/2003
 #include "idxl_layout.h" /* user-data description */
 #include "tcharmc.h" /* for TCHARM_Get/Set_global */
 
-#define IDXL_Abort(msg, ...) CkAbort("Fatal error in IDXL routine %s:\n" msg, __VA_ARGS__)
+#define IDXL_Abort(msg, ...) CkAbortf("Fatal error in IDXL routine %s:\n" msg, __VA_ARGS__)
 
 /**
  * IDXL_Comm is the implementation of the user type IDXL_Comm.

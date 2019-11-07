@@ -48,7 +48,7 @@ void check_test(int argc, char** argv) {
   if (argc > 1) {
     const int expected_pes = atoi(argv[1]);
     if (CmiNumPes() != expected_pes) {
-      CmiAbort("PE count %d doesn't match expectation %d", CmiNumPes(), expected_pes);
+      CmiAbortf("PE count %d doesn't match expectation %d", CmiNumPes(), expected_pes);
     }
   }
 

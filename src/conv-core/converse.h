@@ -1799,11 +1799,12 @@ void realConverseExit(int exitcode);
 void ConverseCleanup(void);
 #endif
 
+CMK_NORETURN void CmiAbort(const char *msg);
 CMK_NORETURN
 #if defined __GNUC__ || defined __clang__
 __attribute__ ((format (printf, 1, 2)))
 #endif
-void CmiAbort(const char *msg, ...);
+void CmiAbortf(const char *fmt, ...);
 
 void CmiOutOfMemory(int nBytes);
 

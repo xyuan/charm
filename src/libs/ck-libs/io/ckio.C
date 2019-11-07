@@ -54,7 +54,7 @@ namespace Ck { namespace IO {
       };
 
       void fatalError(string desc, string file) {
-        CkAbort("FATAL ERROR on PE %d working on file '%s': %s; system reported %s\n",
+        CkAbortf("FATAL ERROR on PE %d working on file '%s': %s; system reported %s\n",
 			CkMyPe(), file.c_str(), desc.c_str(), strerror(errno));
       }
 

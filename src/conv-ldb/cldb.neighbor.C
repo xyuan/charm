@@ -585,7 +585,7 @@ static void CldComputeNeighborData(void)
   if (topofn == NULL) {
     CmiPrintf("SeedLB> Fatal error: Unknown topology: %s. Choose from:\n", _lbtopo);
     printoutTopo();
-    CmiAbort("SeedLB> Fatal error: Unknown topology: %s", _lbtopo);
+    CmiAbortf("SeedLB> Fatal error: Unknown topology: %s", _lbtopo);
   }
   topo = topofn(CmiNumPes());
   npes = getTopoMaxNeighbors(topo);

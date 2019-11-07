@@ -163,7 +163,7 @@ static inline int process_completion_queue();
       int pm_ret = posix_memalign((void**)(&ptr), CACHELINE_LEN, size); \
       if (unlikely((pm_ret != 0) || !ptr))                              \
       {                                                                 \
-          CmiAbort("posix_memalign: ret %d", pm_ret);                   \
+          CmiAbortf("posix_memalign: ret %d", pm_ret);                  \
       }                                                                 \
   } while (0)
 
@@ -174,7 +174,7 @@ static inline int process_completion_queue();
             _ret = func;                                \
             if (likely(_ret == 0)) break;               \
             if (_ret != -FI_EAGAIN) {                   \
-                CmiAbort("OFI_RETRY: ret %jd\n", _ret); \
+                CmiAbortf("OFI_RETRY: ret %jd\n", _ret);\
             }                                           \
             process_completion_queue();                 \
         } while (_ret == -FI_EAGAIN);                   \

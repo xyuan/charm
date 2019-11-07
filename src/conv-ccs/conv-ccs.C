@@ -77,7 +77,7 @@ CcsHandlerRec *CcsGetHandler(const char *name) {
 void CcsSetMergeFn(const char *name, CmiReduceMergeFn newMerge) {
   CcsHandlerRec *rec=(CcsHandlerRec *)CkHashtableGet(CpvAccess(ccsTab),(void *)&name);
   if (rec==NULL) {
-    CmiAbort("[%d] CCS: Unknown CCS handler name %s.\n",CmiMyPe(),name);
+    CmiAbortf("[%d] CCS: Unknown CCS handler name %s.\n",CmiMyPe(),name);
   }
   rec->mergeFn=newMerge;
   rec->redID=CmiGetGlobalReduction();
